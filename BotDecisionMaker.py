@@ -81,7 +81,7 @@ def decision_maker(s_in):
             # Kernel 3 x 3
             w_conv2 = tf.truncated_normal([3, 3, num_chan, conv2_out_num], stddev=0.1)
             b_conv2 = tf.constant(0.1, [conv2_out_num])
-            h_conv2 = tf.nn.relu(tf.conv2d(s, w_conv2) + b_conv2)
+            h_conv2 = tf.nn.relu(tf.conv2d(h_pool1, w_conv2) + b_conv2)
 
         # Pooling layer 2, out: pool2_width x pool2_height x conv2_out_num
         with tf.name_scope('pool2') as scope:
@@ -95,7 +95,7 @@ def decision_maker(s_in):
             # Kernel 3 x 3
             w_conv3 = tf.truncated_normal([3, 3, num_chan, conv3_out_num], stddev=0.1)
             b_conv3 = tf.constant(0.1, [conv1_out_num])
-            h_conv3 = tf.nn.relu(tf.conv2d(s, w_conv3) + b_conv3)
+            h_conv3 = tf.nn.relu(tf.conv2d(h_pool2, w_conv3) + b_conv3)
 
         # Pooling layer 3, out: pool3_width x pool3_height x conv3_out_num
         with tf.name_scope('pool3') as scope:

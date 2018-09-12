@@ -49,6 +49,7 @@ map_height = 100
 num_chan = 7
 
 # Layer 1
+# TODO: Map size might need to be adjusted
 conv1_out_num = 32
 pool1_width = map_width / 2
 pool1_height = map_height / 2
@@ -145,7 +146,7 @@ with tf.name_scope('conv2') as scope:
     # Kernel 3 x 3
     w_conv2 = tf.truncated_normal([3, 3, num_chan, conv2_out_num], stddev=0.1)
     b_conv2 = tf.constant(0.1, [conv2_out_num])
-    h_conv2 = tf.nn.relu(tf.conv2d(s, w_conv2) + b_conv2)
+    h_conv2 = tf.nn.relu(tf.conv2d(h_pool1, w_conv2) + b_conv2)
 
 # Pooling layer 2, out: pool2_width x pool2_height x conv2_out_num
 with tf.name_scope('pool2') as scope:
@@ -159,7 +160,7 @@ with tf.name_scope('conv3') as scope:
     # Kernel 3 x 3
     w_conv3 = tf.truncated_normal([3, 3, num_chan, conv3_out_num], stddev=0.1)
     b_conv3 = tf.constant(0.1, [conv1_out_num])
-    h_conv3 = tf.nn.relu(tf.conv2d(s, w_conv3) + b_conv1)
+    h_conv3 = tf.nn.relu(tf.conv2d(h_pool2, w_conv3) + b_conv1)
 
 # Pooling layer 3, out: pool3_width x pool3_height x conv3_out_num
 with tf.name_scope('pool3') as scope:
