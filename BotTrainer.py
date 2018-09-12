@@ -15,13 +15,9 @@ Channels:   - my ants
             - current ant
 
 Layers:
+3 CNNs and pooling layers and 1 fully connected layer
 
-Output: one of the five possible action ['n', 's', 'w', 'e', 'r']
-'n': north
-'s': south
-'w': west
-'e': east
-'r': remain
+Output: Q(s, a), approximating Q*
 
 
 DQN:
