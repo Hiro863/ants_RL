@@ -1,7 +1,7 @@
 '''
 CNN for training the bot
 
-Aim: Learns 'correct' actions
+Aim: Learns Q(s, a)
 
 Input:
 map_width x map_height x num_chan
