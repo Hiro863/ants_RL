@@ -92,13 +92,20 @@ for i, (s, a, r) in enumerate(data):
 
 # Create minibatches
 # TODO: is this compatible with unstable len(data)?
-minibatch = random.sample(data_s, batch_size)
+minibatch = []
+s_batch = []
+a_batch = []
+r_batch = []
+s_batch_ = []
 
-# Separately store minibatches
-s_batch = np.array([single_data[0] for single_data in minibatch])
-a_batch = np.array([single_data[1] for single_data in minibatch])
-r_batch = np.array([single_data[2] for single_data in minibatch])
-s_batch_ = np.array([single_data[3] for single_data in minibatch])
+for i in range(len(data) / batch_size):
+    minibatch.append(random.sample(data_s, batch_size))
+
+    # Separately store minibatches
+    s_batch.append(np.array([single_data[0] for single_data in minibatch[i]]))
+    a_batch.append(np.array([single_data[1] for single_data in minibatch[i]]))
+    r_batch.append(np.array([single_data[2] for single_data in minibatch[i]]))
+    s_batch_.append(np.array([single_data[3] for single_data in minibatch[i]]))
 
 print('Minibatches ready')
 
@@ -118,15 +125,11 @@ else:
     sess = tf.Session()
     sess.run(init)
 
-#–––––––––––––––––––––––––––––––––––CNN–––––––––––––––––––––––––––––––––#
-
-# Placeholders for inputs
-s = tf.placeholder(tf.float32, shape=[None, map_width, map_height, num_chan])
-s_ = tf.placeholder(tf.float32, shape=[None, map_width, map_height, num_chan])
-a = tf.placeholder(tf.float32, shape=[None, num_acts])
-r = tf.placeholder(tf.float32, shape=[None])
 
 def create_network():
+    # Placeholders for s
+    s = tf.placeholder(tf.float32, shape=[None, map_width, map_height, num_chan])
+
     # Convolutional layer 1, out:map_width x map_height x conv1_num_chan
     with tf.name_scope('conv1') as scope:
         # Kernel 3 x 3
@@ -160,7 +163,7 @@ def create_network():
         # Kernel 3 x 3
         w_conv3 = tf.truncated_normal([3, 3, num_chan, conv3_out_num], stddev=0.1)
         b_conv3 = tf.constant(0.1, [conv1_out_num])
-        h_conv3 = tf.nn.relu(tf.conv2d(h_pool2, w_conv3) + b_conv1)
+        h_conv3 = tf.nn.relu(tf.conv2d(h_pool2, w_conv3) + b_conv3)
 
     # Pooling layer 3, out: pool3_width x pool3_height x conv3_out_num
     with tf.name_scope('pool3') as scope:
@@ -179,6 +182,12 @@ def create_network():
 
 
 q_s, s = create_network()
+
+# Placeholders
+s_ = tf.placeholder(tf.float32, shape=[None, map_width, map_height, num_chan])
+a = tf.placeholder(tf.float32, shape=[None, num_acts])
+r = tf.placeholder(tf.float32, shape=[None])
+
 # Loss function
 q_s_a = tf.reduce_sum(tf.mul(q_s, a))
 q_ = q_s.eval(feed_dict={s: s_})
@@ -195,11 +204,11 @@ init = tf.global_variables_initializer()
 # Training session
 print('Starting a training session')
 for i in range(epoch):
-    sess.run(train_step, feed_dict={s: s_batch, s_: s_batch_, a: a_batch, r: r_batch})
+    sess.run(train_step, feed_dict={s: s_batch[i], s_: s_batch_[i], a: a_batch[i], r: r_batch[i]})
 
     print('Epoch no. %d' % i)
 
 # Save the weights
 saver = tf.train.Saver()
-saver.save(sess, "weights/model.ckpt")
+saver.save(sess, weights_file)
 print('Weights saved')
