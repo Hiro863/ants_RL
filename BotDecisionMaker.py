@@ -9,6 +9,10 @@ import numpy as np
 import random
 
 #–––––––––––––––––––––––––––––Hyperparameters––––––––––––––––––––––––––#
+# File names
+csv_file = 'data_set.csv'
+weights_file = 'weights/model.ckpt'
+
 # Input
 map_width = 100
 map_height = 100
@@ -53,7 +57,7 @@ def decision_maker(s_in):
         # Load weight
         saver = tf.train.Saver()
         with tf.Session() as sess:
-            saver.restore(sess, "weights/model.ckpt")
+            saver.restore(sess, weights_file)
 
         #–––––––––––––––––––––––––––––––––––CNN–––––––––––––––––––––––––––––––––#
 

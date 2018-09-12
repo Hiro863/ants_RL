@@ -41,7 +41,7 @@ import os.path
 #–––––––––––––––––––––––––––––Hyperparameters––––––––––––––––––––––––––#
 # File names
 csv_file = 'data_set.csv'
-weight_file = 'weight/model.ckpt'
+weights_file = 'weights/model.ckpt'
 
 # Input
 map_width = 100
@@ -106,7 +106,7 @@ print('Minibatches ready')
 # Load weight
 saver = tf.train.Saver()
 
-if os.path.isfile(weight_file):
+if os.path.isfile(weights_file):
     with tf.Session() as sess:
         saver.restore(sess, "weights/model.ckpt")
     print('Weights loaded')
