@@ -14,6 +14,7 @@ from BotTrainer import get_data
 # File names
 csv_file = 'data_set.csv'
 weights_file = 'weights/model.ckpt'
+weights_dir = 'weights'
 
 # Input
 map_width = 48
@@ -33,22 +34,14 @@ class DecisionMaker():
     def __init__(self):
         self.q_s, self.s = create_network()
         self.is_weights = False
+        self.sess = tf.Session()
 
         # Load weight
-        if os.path.isfile(weights_file):
-            with tf.Session() as sess:
-                saver = tf.train.Saver()
-                saver.restore(sess, "weights/model.ckpt")
-            print('Weights loaded')
-        else:
+        if os.path.exists(weights_dir):
+            saver = tf.train.Saver()
+            saver.restore(self.sess, "weights/model.ckpt")
             self.is_weights = True
-            # Initialisation
-            init = tf.global_variables_initializer()
-
-            # Session
-            self.sess = tf.Session()
-            self.sess.run(init)
-            print('initialised')
+            print('Weights loaded')
 
     def make_decision(self, s_in):
         # action one-hot vector
@@ -83,9 +76,5 @@ class DecisionMaker():
             return a
 
 
-batches = get_data()
 
-dec = DecisionMaker()
-a = dec.make_decision(batches[0][0][0])
-print(a)
 
