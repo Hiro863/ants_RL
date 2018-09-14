@@ -70,36 +70,44 @@ def get_data():
         print('pickle loaded')
     else:
         print('no pickle file')
+        return None
 
     # Convert from (s, a, r) format to (s, a, r, s_)
     # TODO: Is this discarding important information? (the last turn is discarded?)
     data_s = []
+
     for i, (s, a, r) in enumerate(data):
         if i + 1 < len(data):
             data_s.append((s, a, r, data[i+1][0]))      #data[i+1][0] is s_
 
     # Create minibatches
     minibatches = []
-    s_batch = []
-    a_batch = []
-    r_batch = []
-    s_batch_ = []
+    batches = []
 
     random.shuffle(data_s)
 
-    for i in range(0, int(len(data) / batch_size), batch_size):
+    for i in range(0, len(data) - batch_size, batch_size):
         # TODO: check this section again
         # minibatches = [data_s.pop(random.randrange(len(data_s))) for _ in range(batch_size)]
         minibatches.append(data_s[i:i + batch_size])
 
+
+
     for minibatch in minibatches:
         # Separately store minibatches
-        s_batch.append(np.array([single_data[0] for single_data in minibatch]))
-        a_batch.append(np.array([single_data[1] for single_data in minibatch]))
-        r_batch.append(np.array([single_data[2] for single_data in minibatch]))
-        s_batch_.append(np.array([single_data[3] for single_data in minibatch]))
+        s_batch = np.array([single_data[0] for single_data in minibatch])
+        a_batch = np.array([single_data[1] for single_data in minibatch])
+        r_batch = np.array([single_data[2] for single_data in minibatch])
+        s_batch_ = np.array([single_data[3] for single_data in minibatch])
 
-    return (s_batch, a_batch, r_batch, s_batch_)
+        s_batch = np.reshape(s_batch, (batch_size, map_width, map_height, num_chan))
+        a_batch = np.reshape(a_batch, (batch_size, num_acts))
+        r_batch = np.reshape(r_batch, (batch_size, 1))
+        s_batch_ = np.reshape(s_batch_, (batch_size, map_width, map_height, num_chan))
+
+        batches.append((s_batch, a_batch, r_batch, s_batch_))
+
+    return batches
 
 
 
@@ -180,18 +188,13 @@ def train_network(q_s, s, sess, batch):
     sess.run(tf.global_variables_initializer())
 
     for i in range(10000):
-        s_batch_ = np.array(s_batch_)
-        s_batch_ = np.reshape(s_batch_, (batch_size, map_width, map_height, num_chan))
 
         q_s_a_t = q_s.eval(feed_dict={s: s_batch_})
 
         # TODO: something wrong the way r_batch is created
         for j in range(batch_size):
-            y_batch.append(r_batch[0][j] + gamma * np.max(q_s_a_t))
+            y_batch.append(r_batch[j][0] + gamma * np.max(q_s_a_t))
 
-        # TODO: reshape inside the get_data()
-        a_batch = np.array(a_batch)
-        a_batch = np.reshape(a_batch, (batch_size, num_acts))
         train_step.run(feed_dict={y: y_batch, a: a_batch, s: s_batch_})
 
         loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
@@ -201,7 +204,8 @@ def train_network(q_s, s, sess, batch):
 batches = get_data()
 sess = tf.InteractiveSession()
 q_s, s = create_network()
-train_network(q_s, s, sess, batches)
+for batch in batches:
+    train_network(q_s, s, sess, batch)
 
 # Save the weights
 saver = tf.train.Saver()
