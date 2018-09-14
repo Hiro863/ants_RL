@@ -30,6 +30,7 @@ import pickle
 # File names
 pickle_file = 'dummy_data.p'
 weights_file = 'weights/model.ckpt'
+weights_dir = 'weights'
 
 # Input
 map_width = 48
@@ -161,7 +162,13 @@ def train_network(q_s, s, sess, batches):
     train_step = tf.train.AdamOptimizer(l_rate).minimize(loss)
 
     # TODO: Is this the right place to initialise?
-    sess.run(tf.global_variables_initializer())
+    if not os.path.exists(weights_dir):
+        sess.run(tf.global_variables_initializer())
+    else:
+        # Load weight
+        saver = tf.train.Saver()
+        saver.restore(sess, "weights/model.ckpt")
+        print('Weights loaded')
 
     # Training
     for i in range(epoch):
