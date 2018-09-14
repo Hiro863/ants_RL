@@ -121,9 +121,6 @@ if os.path.isfile(weights_file):
     print('Weights loaded')
 
 
-
-
-
 def create_network():
     # Placeholders for s
     s = tf.placeholder(tf.float32, shape=[None, map_width, map_height, num_chan])
@@ -197,14 +194,15 @@ def train_network(q_s, s, sess, batches, epoch):
     print('Epoch: %d, Loss: %f' % (epoch, loss_val))
 
 
+def train_session():
+    batches = get_data()
+    sess = tf.InteractiveSession()
+    q_s, s = create_network()
+    for i in range(epoch):
+        train_network(q_s, s, sess, batches, i)
 
-batches = get_data()
-sess = tf.InteractiveSession()
-q_s, s = create_network()
-for i in range(epoch):
-    train_network(q_s, s, sess, batches, i)
+    # Save the weights
+    saver = tf.train.Saver()
+    saver.save(sess, weights_file)
+    print('Weights saved')
 
-# Save the weights
-saver = tf.train.Saver()
-saver.save(sess, weights_file)
-print('Weights saved')
