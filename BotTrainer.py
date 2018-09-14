@@ -26,7 +26,6 @@ a: action, numpy array, [num_acts]
 r: reward, float
 q_s: Q(s, a), numpy array [num_acts] (for all a')
 q_s_a: Q (s, a), float
-q_opt: Q*(s, a), float
 q_: Q*(s', a'), numpy array [num_acts] (for all a)
 
 
@@ -177,7 +176,6 @@ def create_network():
         w_full = tf.truncated_normal([pool3_width * pool3_height * conv3_out_num, num_acts])
         b_full = tf.constant(0.1, [num_acts])
         q_s = tf.matmul(h_pool3, w_full) + b_full
-
     return q_s, s
 
 
