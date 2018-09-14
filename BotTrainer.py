@@ -58,13 +58,12 @@ num_acts = 5
 # Reinforcement learning parameters
 gamma = 0.9
 batch_size = 10
-epoch = 100
+epoch = 1
 l_rate = 0.1
 
 
 #––––––––––––––––––––––––––––Input Data–––––––––––––––––––––––––––––––––#
 def get_data():
-    # Load the data from csv file
     if os.path.isfile(pickle_file):
         data = pickle.load(open(pickle_file, "rb"))
         print('pickle loaded')
@@ -108,8 +107,6 @@ def get_data():
         batches.append((s_batch, a_batch, r_batch, s_batch_))
 
     return batches
-
-print('Minibatches ready')
 
 #––––––––––––––––––––––––––––---load weight–––––––––––––––––––––––––––––#
 # Load weight
@@ -193,16 +190,4 @@ def train_network(q_s, s, sess, batches, epoch):
     loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
     print('Epoch: %d, Loss: %f' % (epoch, loss_val))
 
-
-def train_session():
-    batches = get_data()
-    sess = tf.InteractiveSession()
-    q_s, s = create_network()
-    for i in range(epoch):
-        train_network(q_s, s, sess, batches, i)
-
-    # Save the weights
-    saver = tf.train.Saver()
-    saver.save(sess, weights_file)
-    print('Weights saved')
 
