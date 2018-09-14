@@ -36,4 +36,5 @@ def train_session():
     saver.save(sess, weights_file)
     print('Weights saved')
 
+
 train_session()

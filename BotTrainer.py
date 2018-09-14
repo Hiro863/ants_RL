@@ -61,7 +61,6 @@ batch_size = 10
 l_rate = 0.1
 epoch = 100
 
-random.seed(0)
 
 def get_data():
     if os.path.isfile(pickle_file):
