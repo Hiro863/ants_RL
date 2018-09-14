@@ -110,21 +110,12 @@ print('Minibatches ready')
 
 #––––––––––––––––––––––––––––---load weight–––––––––––––––––––––––––––––#
 # Load weight
-# TODO: Does this have to be after creating the network?
-
-
+# TODO: load weight
 if os.path.isfile(weights_file):
     saver = tf.train.Saver()
     with tf.Session() as sess:
         saver.restore(sess, "weights/model.ckpt")
     print('Weights loaded')
-else:
-  # Initialisation
-  init = tf.global_variables_initializer()
-
-  # Session
-  sess = tf.Session()
-  sess.run(init)
 
 
 
@@ -179,7 +170,6 @@ def train_network(q_s, s, sess, batch):
     # Placeholders
     a = tf.placeholder(tf.float32, shape=[None, num_acts])
     y = tf.placeholder(tf.float32, shape=[None])
-    r = tf.placeholder(tf.float32, shape=[None])
     q_s_a = tf.reduce_sum(tf.multiply(q_s, a))
     loss = tf.reduce_mean(tf.square(y - q_s_a))
     train_step = tf.train.AdamOptimizer(l_rate).minimize(loss)
@@ -190,23 +180,23 @@ def train_network(q_s, s, sess, batch):
     sess.run(tf.global_variables_initializer())
 
     for i in range(10000):
-        print('i: %d' % i)
         s_batch_ = np.array(s_batch_)
         s_batch_ = np.reshape(s_batch_, (batch_size, map_width, map_height, num_chan))
 
         q_s_a_t = q_s.eval(feed_dict={s: s_batch_})
 
         # TODO: something wrong the way r_batch is created
-        for i in range(batch_size):
-            y_batch.append(r_batch[0][i] + gamma * np.max(q_s_a_t))
+        for j in range(batch_size):
+            y_batch.append(r_batch[0][j] + gamma * np.max(q_s_a_t))
 
         # TODO: reshape inside the get_data()
         a_batch = np.array(a_batch)
         a_batch = np.reshape(a_batch, (batch_size, num_acts))
-        train_step.run(feed_dict={
-            y: y_batch,
-            a: a_batch,
-            s: s_batch_})
+        train_step.run(feed_dict={y: y_batch, a: a_batch, s: s_batch_})
+
+        loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
+        print('i: %d, loss: %f' % (i, loss_val))
+
 
 batches = get_data()
 sess = tf.InteractiveSession()
