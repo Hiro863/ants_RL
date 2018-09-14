@@ -109,13 +109,7 @@ def get_data():
     return batches
 
 #––––––––––––––––––––––––––––---load weight–––––––––––––––––––––––––––––#
-# Load weight
-# TODO: load weight
-if os.path.isfile(weights_file):
-    saver = tf.train.Saver()
-    with tf.Session() as sess:
-        saver.restore(sess, "weights/model.ckpt")
-    print('Weights loaded')
+
 
 
 def create_network():

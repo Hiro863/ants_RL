@@ -8,7 +8,6 @@ import numpy as np
 import random
 import os.path
 from BotTrainer import create_network
-from BotTrainer import get_data
 
 #–––––––––––––––––––––––––––––Hyperparameters––––––––––––––––––––––––––#
 # File names
