@@ -37,7 +37,7 @@ map_height = 48
 num_chan = 7
 
 # Layer 1
-# TODO: Map size must be divisible by 8, this is problematic in many cases
+# Map size must be multiples of 8
 conv1_out_num = 32
 pool1_width = int(map_width / 2)
 pool1_height = int(map_height / 2)
@@ -58,11 +58,11 @@ num_acts = 5
 # Reinforcement learning parameters
 gamma = 0.9
 batch_size = 10
-epoch = 1
 l_rate = 0.1
+epoch = 100
 
+random.seed(0)
 
-#––––––––––––––––––––––––––––Input Data–––––––––––––––––––––––––––––––––#
 def get_data():
     if os.path.isfile(pickle_file):
         data = pickle.load(open(pickle_file, "rb"))
@@ -72,7 +72,6 @@ def get_data():
         return None
 
     # Convert from (s, a, r) format to (s, a, r, s_)
-    # TODO: Is this discarding important information? (the last turn is discarded?)
     data_s = []
 
     for i, (s, a, r) in enumerate(data):
@@ -86,10 +85,8 @@ def get_data():
     random.shuffle(data_s)
 
     for i in range(0, len(data) - batch_size, batch_size):
-        # TODO: check this section again
         # minibatches = [data_s.pop(random.randrange(len(data_s))) for _ in range(batch_size)]
         minibatches.append(data_s[i:i + batch_size])
-
 
 
     for minibatch in minibatches:
@@ -108,9 +105,6 @@ def get_data():
 
     return batches
 
-#––––––––––––––––––––––––––––---load weight–––––––––––––––––––––––––––––#
-
-
 
 def create_network():
     # Placeholders for s
@@ -123,9 +117,9 @@ def create_network():
 
     def pooling_layer(conv):
         h_pool = tf.nn.max_pool(conv,
-                                 ksize=[1, 2, 2, 1],
-                                 strides=[1, 2, 2, 1],
-                                 padding='SAME')
+                                ksize=[1, 2, 2, 1],
+                                strides=[1, 2, 2, 1],
+                                padding='SAME')
         return h_pool
 
     def full_layer(in_data, num_neuron, num_out):
@@ -157,31 +151,34 @@ def create_network():
     return q_s, s
 
 
-def train_network(q_s, s, sess, batches, epoch):
+def train_network(q_s, s, sess, batches):
     # Placeholders
     a = tf.placeholder(tf.float32, shape=[None, num_acts])
     y = tf.placeholder(tf.float32, shape=[None])
+
+    # Loss function
     q_s_a = tf.reduce_sum(tf.multiply(q_s, a))
     loss = tf.reduce_mean(tf.square(y - q_s_a))
     train_step = tf.train.AdamOptimizer(l_rate).minimize(loss)
 
-    for batch in batches:
-        (s_batch, a_batch, r_batch, s_batch_) = batch
-        y_batch = []
+    # TODO: Is this the right place to initialise?
+    sess.run(tf.global_variables_initializer())
 
-        sess.run(tf.global_variables_initializer())
+    # Training
+    for i in range(epoch):
+        for batch in batches:
+            (s_batch, a_batch, r_batch, s_batch_) = batch
+            y_batch = []
 
+            q_s_a_t = q_s.eval(feed_dict={s: s_batch_})
 
-        q_s_a_t = q_s.eval(feed_dict={s: s_batch_})
+            for j in range(batch_size):
+                y_batch.append(r_batch[j][0] + gamma * np.max(q_s_a_t))
 
-        # TODO: something wrong the way r_batch is created
-        for i in range(batch_size):
-            y_batch.append(r_batch[i][0] + gamma * np.max(q_s_a_t))
+            train_step.run(feed_dict={y: y_batch, a: a_batch, s: s_batch_})
 
-        train_step.run(feed_dict={y: y_batch, a: a_batch, s: s_batch_})
+        loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
+        print('Epoch: %d, Loss: %f' % (i, loss_val))
 
-
-    loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
-    print('Epoch: %d, Loss: %f' % (epoch, loss_val))
 
 

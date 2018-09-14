@@ -6,7 +6,8 @@ from BotTrainer import get_data, create_network, train_network
 weights_file = 'weights/model.ckpt'
 weights_dir = 'weights'
 
-epoch = 1
+epoch = 10
+
 
 def train_session():
     # Fetch data
@@ -20,16 +21,15 @@ def train_session():
     print('Creating network...')
     q_s, s = create_network()
 
-    # Train Network
-    print('Training...')
-    for i in range(epoch):
-        train_network(q_s, s, sess, batches, i)
-
     # Load weight
     if os.path.exists(weights_dir):
         saver = tf.train.Saver()
         saver.restore(sess, "weights/model.ckpt")
         print('Weights loaded')
+
+    # Train Network
+    print('Training...')
+    train_network(q_s, s, sess, batches)
 
     # Save the weights
     saver = tf.train.Saver()
