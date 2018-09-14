@@ -32,12 +32,12 @@ pickle_file = 'dummy_data.p'
 weights_file = 'weights/model.ckpt'
 
 # Input
-map_width = 80
-map_height = 80
+map_width = 48
+map_height = 48
 num_chan = 7
 
 # Layer 1
-# TODO: Map size might need to be adjusted
+# TODO: Map size must be divisible by 8, this is problematic in many cases
 conv1_out_num = 32
 pool1_width = int(map_width / 2)
 pool1_height = int(map_height / 2)
@@ -58,8 +58,8 @@ num_acts = 5
 # Reinforcement learning parameters
 gamma = 0.9
 batch_size = 10
-epoch = 1000
-l_rate = 0.01
+epoch = 100
+l_rate = 0.1
 
 
 #––––––––––––––––––––––––––––Input Data–––––––––––––––––––––––––––––––––#
@@ -108,11 +108,6 @@ def get_data():
         batches.append((s_batch, a_batch, r_batch, s_batch_))
 
     return batches
-
-
-
-
-
 
 print('Minibatches ready')
 
@@ -174,7 +169,7 @@ def create_network():
     return q_s, s
 
 
-def train_network(q_s, s, sess, batch):
+def train_network(q_s, s, sess, batches, epoch):
     # Placeholders
     a = tf.placeholder(tf.float32, shape=[None, num_acts])
     y = tf.placeholder(tf.float32, shape=[None])
@@ -182,30 +177,32 @@ def train_network(q_s, s, sess, batch):
     loss = tf.reduce_mean(tf.square(y - q_s_a))
     train_step = tf.train.AdamOptimizer(l_rate).minimize(loss)
 
-    (s_batch, a_batch, r_batch, s_batch_) = batch
-    y_batch = []
+    for batch in batches:
+        (s_batch, a_batch, r_batch, s_batch_) = batch
+        y_batch = []
 
-    sess.run(tf.global_variables_initializer())
+        sess.run(tf.global_variables_initializer())
 
-    for i in range(10000):
 
         q_s_a_t = q_s.eval(feed_dict={s: s_batch_})
 
         # TODO: something wrong the way r_batch is created
-        for j in range(batch_size):
-            y_batch.append(r_batch[j][0] + gamma * np.max(q_s_a_t))
+        for i in range(batch_size):
+            y_batch.append(r_batch[i][0] + gamma * np.max(q_s_a_t))
 
         train_step.run(feed_dict={y: y_batch, a: a_batch, s: s_batch_})
 
-        loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
-        print('i: %d, loss: %f' % (i, loss_val))
+
+    loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
+    print('Epoch: %d, Loss: %f' % (epoch, loss_val))
+
 
 
 batches = get_data()
 sess = tf.InteractiveSession()
 q_s, s = create_network()
-for batch in batches:
-    train_network(q_s, s, sess, batch)
+for i in range(epoch):
+    train_network(q_s, s, sess, batches, i)
 
 # Save the weights
 saver = tf.train.Saver()
