@@ -110,6 +110,7 @@ print('Minibatches ready')
 
 #––––––––––––––––––––––––––––---load weight–––––––––––––––––––––––––––––#
 # Load weight
+# TODO: Does this have to be after creating the network?
 saver = tf.train.Saver()
 
 if os.path.isfile(weights_file):

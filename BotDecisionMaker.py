@@ -27,9 +27,23 @@ class Decision_Maker():
         # TODO:Load weights
         self.q_s, self.s = create_network()
 
+        # Load weight
+        saver = tf.train.Saver()
+
+        if os.path.isfile(weights_file):
+            with tf.Session() as sess:
+                saver.restore(sess, "weights/model.ckpt")
+            print('Weights loaded')
+        else:
+            # Initialisation
+            init = tf.global_variables_initializer()
+
+            # Session
+            sess = tf.Session()
+            sess.run(init)
+
 
     def make_decision(self, s_in):
-
         # action one-hot vector
         a = np.zeros(num_acts)
 
