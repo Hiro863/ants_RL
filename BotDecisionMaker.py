@@ -8,8 +8,8 @@ import numpy as np
 import random
 import os.path
 from BotTrainer import create_network
+from antutils import log
 
-#–––––––––––––––––––––––––––––Hyperparameters––––––––––––––––––––––––––#
 # File names
 csv_file = 'data_set.csv'
 weights_file = 'weights/model.ckpt'
@@ -17,7 +17,7 @@ weights_dir = 'weights'
 
 # Input
 map_width = 48
-map_height = 48
+map_height = 40
 num_chan = 7
 
 # Output
@@ -45,7 +45,6 @@ class DecisionMaker:
     def make_decision(self, s_in):
         # action one-hot vector
         a = np.zeros(num_acts)
-
         s_in = np.reshape(s_in, (1, map_width, map_height, num_chan))
 
         # Move randomly if first time, else move according to learnt strategy
@@ -73,7 +72,3 @@ class DecisionMaker:
 
             a[a_index] = 1
             return a
-
-
-
-

@@ -26,8 +26,7 @@ import random
 import os.path
 import pickle
 
-# TODO: whatś the relationship between the rewards and each movement? what about movements within a turn
-#–––––––––––––––––––––––––––––Hyperparameters––––––––––––––––––––––––––#
+# TODO: whats the relationship between the rewards and each movement? what about movements within a turn
 # File names
 pickle_file = 'dummy_data.p'
 weights_file = 'weights/model.ckpt'
@@ -184,6 +183,3 @@ def train_network(q_s, s, sess, batches):
 
         loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
         print('Epoch: %d, Loss: %f' % (i, loss_val))
-
-
-
