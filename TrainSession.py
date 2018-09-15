@@ -5,8 +5,6 @@ from BotTrainer import get_data, create_network, train_network
 weights_file = 'weights/model.ckpt'
 weights_dir = 'weights'
 
-epoch = 10
-
 
 def train_session():
     # Fetch data

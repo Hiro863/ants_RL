@@ -59,7 +59,7 @@ num_acts = 5
 
 # Reinforcement learning parameters
 gamma = 0.9
-batch_size = 10
+batch_size = 5
 l_rate = 0.1
 epoch = 100
 
