@@ -21,8 +21,9 @@ init_epsilon = 1.0
 fin_epsilon = 0.05
 explore = 500
 
+
 # TODO maybe create a class to avoid having to create network each time
-class Decision_Maker():
+class DecisionMaker():
     def __init__(self):
         # TODO:Load weights
         self.q_s, self.s = create_network()
@@ -41,7 +42,6 @@ class Decision_Maker():
             # Session
             sess = tf.Session()
             sess.run(init)
-
 
     def make_decision(self, s_in):
         # action one-hot vector
@@ -71,4 +71,3 @@ class Decision_Maker():
 
             a[a_index] = 1
             return a
-

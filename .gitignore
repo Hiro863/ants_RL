@@ -3,3 +3,6 @@ __pycache__/
 *$py.class
 .idea
 game_logs/
+.ipynb_checkpoints
+*.ipynb
+ants_obj/

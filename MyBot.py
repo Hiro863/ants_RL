@@ -3,8 +3,11 @@ from ants import Ants
 from pprint import pprint
 import traceback
 import os
+import random
+import pickle
 
 DEBUG_LOG = os.path.join(os.path.dirname(__file__), "debug.txt")
+i = 0
 
 
 def logexcept(func):
@@ -23,6 +26,14 @@ def log(data):
         pprint(data, f)
 
 
+@logexcept
+def save_ants_obj(ants):
+    global i
+    filename = os.path.join(os.path.dirname(__file__), "/ants_obj/ants_" + str(i) + ".p")
+    pickle.dump(ants, open(filename), "wb")
+    i += 1
+
+
 class MyBot:
     def __init__(self):
         pass
@@ -33,13 +44,16 @@ class MyBot:
     @logexcept
     def do_turn(self, ants):
         for ant_loc in ants.my_ants():
-            log(ants.my_ants()[0])
             directions = ('n', 'e', 's', 'w')
-            for direction in directions:
+            found_passable = False
+            while not found_passable:
+                direction = random.choice(directions)
                 new_loc = ants.destination(ant_loc, direction)
-                if (ants.passable(new_loc)):
+                found_passable = ants.passable(new_loc)
+
+                if found_passable:
                     ants.issue_order((ant_loc, direction))
-                    break
+
             if ants.time_remaining() < 10:
                 break
 
