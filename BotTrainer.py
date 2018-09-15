@@ -34,7 +34,7 @@ weights_dir = 'weights'
 
 # Input
 map_width = 48
-map_height = 48
+map_height = 40
 num_chan = 7
 
 # Layer 1
