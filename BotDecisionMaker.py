@@ -29,7 +29,7 @@ fin_epsilon = 0.05
 explore = 500
 
 
-class DecisionMaker:
+class DecisionMaker():
     def __init__(self):
         self.q_s, self.s = create_network()
         self.is_weights = False
