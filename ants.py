@@ -5,26 +5,7 @@ import random
 import time
 from collections import defaultdict
 from math import sqrt
-import os
-from pprint import pprint
 
-DEBUG_LOG = os.path.join(os.path.dirname(__file__), "debug.txt")
-
-
-def logexcept(func):
-    def wrapper(*args, **kwargs):
-        try:
-            func(*args, **kwargs)
-        except Exception as e:
-            with open(DEBUG_LOG, 'a+') as f:
-                f.write(str(e))
-                f.write(traceback.format_exc())
-    return wrapper
-
-
-def log(data):
-    with open(DEBUG_LOG, 'a+') as f:
-        pprint(data, f)
 
 MY_ANT = 0
 ANTS = 0
@@ -55,6 +36,7 @@ BEHIND = {'n': 's',
           's': 'n',
           'e': 'w',
           'w': 'e'}
+
 
 class Ants():
     def __init__(self):

@@ -26,7 +26,6 @@ import random
 import os.path
 import pickle
 
-#–––––––––––––––––––––––––––––Hyperparameters––––––––––––––––––––––––––#
 # File names
 pickle_file = 'dummy_data.p'
 weights_file = 'weights/model.ckpt'
@@ -178,6 +177,3 @@ def train_network(q_s, s, sess, batches):
 
         loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
         print('Epoch: %d, Loss: %f' % (i, loss_val))
-
-
-
