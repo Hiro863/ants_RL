@@ -1,5 +1,4 @@
 import tensorflow as tf
-import os.path
 from BotTrainer import get_data, create_network, train_network
 
 
@@ -20,12 +19,6 @@ def train_session():
     # Create Network
     print('Creating network...')
     q_s, s = create_network()
-
-    # Load weight
-    if os.path.exists(weights_dir):
-        saver = tf.train.Saver()
-        saver.restore(sess, "weights/model.ckpt")
-        print('Weights loaded')
 
     # Train Network
     print('Training...')
