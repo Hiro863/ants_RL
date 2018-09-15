@@ -26,9 +26,11 @@ import random
 import os.path
 import pickle
 
+# TODO: whats the relationship between the rewards and each movement? what about movements within a turn
 # File names
 pickle_file = 'dummy_data.p'
 weights_file = 'weights/model.ckpt'
+weights_dir = 'weights'
 
 # Input
 map_width = 48
@@ -70,6 +72,7 @@ def get_data():
         return None
 
     # Convert from (s, a, r) format to (s, a, r, s_)
+    # TODO: should it take more previous movements into account?
     data_s = []
 
     for i, (s, a, r) in enumerate(data):
@@ -83,9 +86,7 @@ def get_data():
     random.shuffle(data_s)
 
     for i in range(0, len(data) - batch_size, batch_size):
-        # minibatches = [data_s.pop(random.randrange(len(data_s))) for _ in range(batch_size)]
         minibatches.append(data_s[i:i + batch_size])
-
 
     for minibatch in minibatches:
         # Separately store minibatches
@@ -159,8 +160,13 @@ def train_network(q_s, s, sess, batches):
     loss = tf.reduce_mean(tf.square(y - q_s_a))
     train_step = tf.train.AdamOptimizer(l_rate).minimize(loss)
 
-    # TODO: Is this the right place to initialise?
-    sess.run(tf.global_variables_initializer())
+    if not os.path.exists(weights_dir):
+        sess.run(tf.global_variables_initializer())
+    else:
+        # Load weight
+        saver = tf.train.Saver()
+        saver.restore(sess, "weights/model.ckpt")
+        print('Weights loaded')
 
     # Training
     for i in range(epoch):
