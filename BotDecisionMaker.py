@@ -3,6 +3,7 @@ Input: state s
 Output: action a, as a one-hot vector
 '''
 
+import tensorflow as tf
 import numpy as np
 import random
 import os.path
@@ -12,6 +13,12 @@ from BotTrainer import create_network
 # File names
 csv_file = 'data_set.csv'
 weights_file = 'weights/model.ckpt'
+weights_dir = 'weights'
+
+# Input
+map_width = 48
+map_height = 48
+num_chan = 7
 
 # Output
 num_acts = 5
@@ -22,19 +29,23 @@ fin_epsilon = 0.05
 explore = 500
 
 
+<<<<<<< HEAD
 # TODO maybe create a class to avoid having to create network each time
+=======
+>>>>>>> 40a8f0d9ac3e9d6d0779777dd43873543843c8eb
 class DecisionMaker():
     def __init__(self):
-        # TODO:Load weights
         self.q_s, self.s = create_network()
+        self.is_weights = False
+        self.sess = tf.Session()
 
         # Load weight
-        saver = tf.train.Saver()
-
-        if os.path.isfile(weights_file):
-            with tf.Session() as sess:
-                saver.restore(sess, "weights/model.ckpt")
+        if os.path.exists(weights_dir):
+            saver = tf.train.Saver()
+            saver.restore(self.sess, "weights/model.ckpt")
+            self.is_weights = True
             print('Weights loaded')
+<<<<<<< HEAD
         else:
             # Initialisation
             init = tf.global_variables_initializer()
@@ -42,13 +53,17 @@ class DecisionMaker():
             # Session
             sess = tf.Session()
             sess.run(init)
+=======
+>>>>>>> 40a8f0d9ac3e9d6d0779777dd43873543843c8eb
 
     def make_decision(self, s_in):
         # action one-hot vector
         a = np.zeros(num_acts)
 
+        s_in = np.reshape(s_in, (1, map_width, map_height, num_chan))
+
         # Move randomly if first time, else move according to learnt strategy
-        if not os.path.isfile(weights_file):
+        if not self.is_weights:
             a_index = random.randrange(num_acts)
             a[a_index] = 1
             return a
@@ -66,8 +81,16 @@ class DecisionMaker():
                 if epsilon > fin_epsilon:
                     epsilon -= (init_epsilon - fin_epsilon) / explore
 
-                q = self.q_s.eval(feed_dict={self.s: s_in})
+                with self.sess:
+                    q = self.q_s.eval(feed_dict={self.s: s_in})
                 a_index = np.argmax(q)
 
             a[a_index] = 1
             return a
+<<<<<<< HEAD
+=======
+
+
+
+
+>>>>>>> 40a8f0d9ac3e9d6d0779777dd43873543843c8eb
