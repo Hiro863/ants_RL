@@ -9,11 +9,11 @@ import random
 import os.path
 from BotTrainer import create_network
 from antutils import log
+from BotTrainer import get_data
 
 # File names
-csv_file = 'data_set.csv'
-weights_file = 'weights/model.ckpt'
-weights_dir = 'weights'
+weights_file = 'tools/weights/model.ckpt'
+weights_dir = 'tools/weights'
 
 # Input
 map_width = 48
@@ -24,7 +24,7 @@ num_chan = 7
 num_acts = 5
 
 # Reinforcement learning parameters
-init_epsilon = 1.0
+init_epsilon = 0.05
 fin_epsilon = 0.05
 explore = 500
 
@@ -38,7 +38,7 @@ class DecisionMaker:
         # Load weight
         if os.path.exists(weights_dir):
             saver = tf.train.Saver()
-            saver.restore(self.sess, "weights/model.ckpt")
+            saver.restore(self.sess, weights_file)
             self.is_weights = True
             print('Weights loaded')
 
@@ -72,3 +72,14 @@ class DecisionMaker:
 
             a[a_index] = 1
             return a
+
+
+'''
+batches = get_data()
+batch = batches[0]
+single_data = batch[0]
+state = single_data[0]
+dmaker = DecisionMaker()
+a = dmaker.make_decision(state)
+print(a)
+'''

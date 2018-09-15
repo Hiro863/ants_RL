@@ -2,8 +2,8 @@ import tensorflow as tf
 from BotTrainer import get_data, create_network, train_network
 
 
-weights_file = 'weights/model.ckpt'
-weights_dir = 'weights'
+weights_file = 'tools/weights/model.ckpt'
+weights_dir = 'tools/weights'
 
 
 def train_session():

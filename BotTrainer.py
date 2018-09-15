@@ -29,8 +29,8 @@ import pickle
 # TODO: whats the relationship between the rewards and each movement? what about movements within a turn
 # File names
 pickle_file = 'dummy_data.p'
-weights_file = 'weights/model.ckpt'
-weights_dir = 'weights'
+weights_file = 'tools/weights/model.ckpt'
+weights_dir = 'tools/weights'
 
 # Input
 map_width = 48
@@ -165,7 +165,7 @@ def train_network(q_s, s, sess, batches):
     else:
         # Load weight
         saver = tf.train.Saver()
-        saver.restore(sess, "weights/model.ckpt")
+        saver.restore(sess, weights_file)
         print('Weights loaded')
 
     # Training
