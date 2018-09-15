@@ -12,8 +12,8 @@ from antutils import log
 from BotTrainer import get_data
 
 # File names
-weights_file = 'tools/weights/model.ckpt'
-weights_dir = 'tools/weights'
+weights_file = 'weights/model.ckpt'
+weights_dir = 'weights'
 
 # Input
 map_width = 48

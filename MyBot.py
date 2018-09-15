@@ -9,9 +9,9 @@ import numpy as np
 
 
 class MyBot:
-    def __init__(self, trainingdata, decisionmaker):
+    def __init__(self, trainingdata):
         self.traindat = trainingdata
-        self.dmake = decisionmaker
+        self.dmake = DecisionMaker()
         self.directions = {
             0: 'n',
             1: 'e',
@@ -57,8 +57,7 @@ if __name__ == '__main__':
         except OSError:
             pass
         traindat = TrainingData(remove=True)
-        decisionmaker = DecisionMaker()
-        Ants.run(MyBot(traindat, decisionmaker))
+        Ants.run(MyBot(traindat))
 
     try:
         import psyco
