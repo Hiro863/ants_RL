@@ -62,9 +62,9 @@ class TrainingStorage:
 
         return state
 
-    def remember(self, state, action, reward, turn):
+    def remember(self, state, action, reward, label, turn):
         with open(self.path, 'ab+') as f:
-            data = state, action, reward, turn
+            data = state, action, reward, label, turn
             Pickler(f).dump(data)
 
     def items(self):
@@ -72,11 +72,11 @@ class TrainingStorage:
             unpickler = Unpickler(f)
             try:
                 while True:
-                    sparse_state, action, reward, turn = unpickler.load()
+                    sparse_state, action, reward, label, turn = unpickler.load()
                     state = []
                     for sparse_state_channel in sparse_state:
                         state.append(sparse_state_channel.toarray())
 
-                    yield state, action, reward, turn
+                    yield state, action, reward, label, turn
             except EOFError:
                 pass

@@ -6,8 +6,7 @@ from storage import TrainingStorage
 from antutils import logexcept, DEBUG_LOG
 from BotDecisionMaker import DecisionMaker
 import numpy as np
-from antutils import log
-
+from tracking import Tracking
 
 class MyBot:
     def __init__(self, storage):
@@ -23,6 +22,7 @@ class MyBot:
         self.history = {}
         self.history_length = 3
         self.turn = 0
+        self.tracking = None
 
     def do_setup(self, ants):
         pass
@@ -43,11 +43,11 @@ class MyBot:
 
         return reward
 
-    def append_history(self, state, action):
+    def append_history(self, state, action, label):
         if self.turn in self.history:
-            self.history[self.turn].append((state, action))
+            self.history[self.turn].append((state, action, label))
         else:
-            self.history[self.turn] = [(state, action)]
+            self.history[self.turn] = [(state, action, label)]
 
         expired = (key for key in self.history.keys() if key <= (self.turn - self.history_length))
         for turn in list(expired):
@@ -56,16 +56,22 @@ class MyBot:
     @logexcept
     def do_turn(self, ants):
         self.turn += 1
+        if not self.tracking:
+            self.tracking = Tracking(ants)
+        else:
+            self.tracking.update(ants)
+
         for ant_loc in ants.my_ants():
             state = self.storage.state(ants, ant_loc)
             direction_onehot = self.think(state)
             direction = self.directions[np.where(direction_onehot == 1)[0][0]]
 
             # remember what have we done this turn
-            self.append_history(state, direction_onehot)
+            label = self.tracking.loc_to_ants[ant_loc]
+            self.append_history(state, direction_onehot, label)
 
             if direction != 'r':
-                ants.issue_order((ant_loc, direction))
+                self.tracking.move_ant(ant_loc, direction, ants)
 
             if ants.time_remaining() < 10:
                 break
@@ -74,10 +80,11 @@ class MyBot:
         # thats why only previous turn is stored
         offset = 2
         if len(self.history) > offset:
-            for prev_state, prev_action in self.history[self.turn - offset]:
+            for prev_state, prev_action, prev_label in self.history[self.turn - offset]:
                 self.storage.remember(
                     prev_state, prev_action,
-                    self.reward(state), self.turn - offset
+                    self.reward(state), prev_label,
+                    self.turn - offset
                 )
 
 
