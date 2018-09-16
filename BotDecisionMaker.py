@@ -8,12 +8,9 @@ import numpy as np
 import random
 import os.path
 from BotTrainer import create_network
-from antutils import log
-from BotTrainer import get_data
 
 # File names
-weights_file = 'weights/model.ckpt'
-weights_dir = 'weights'
+weights_file = 'tools/weights/model.ckpt'
 
 # Input
 map_width = 48
@@ -31,13 +28,25 @@ explore = 500
 
 class DecisionMaker:
     def __init__(self):
-        self.q_s, self.s = create_network()
+        self.q_s, self.s, variables = create_network()
         self.is_weights = False
         self.sess = tf.Session()
+        self.sess.run(tf.global_variables_initializer())
 
         # Load weight
-        if os.path.exists(weights_dir):
-            saver = tf.train.Saver()
+
+        if os.path.exists(weights_file):
+            w_conv1, w_conv2, w_conv3, b_conv1, b_conv2, b_conv3, w_full, b_full = variables
+
+            saver = tf.train.Saver({'w_conv1': w_conv1,
+                                    'w_conv2': w_conv2,
+                                    'w_conv3': w_conv3,
+                                    'b-conv1': b_conv1,
+                                    'b_conv2': b_conv2,
+                                    'b_conv3': b_conv3,
+                                    'w_full': w_full,
+                                    'b_full': b_full})
+
             saver.restore(self.sess, weights_file)
             self.is_weights = True
             print('Weights loaded')
@@ -72,6 +81,3 @@ class DecisionMaker:
 
             a[a_index] = 1
             return a
-
-
-
