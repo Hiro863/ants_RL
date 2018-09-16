@@ -5,9 +5,8 @@ Needs to be updated at the beginning of every turn
 
 '''
 
-
 class Tracking:
-    def __init__(self, ants):
+    def __init__(self):
         self.loc_to_ants = {}
         self.ants_to_loc = {}
         self.num_ants = 0
@@ -36,6 +35,9 @@ class Tracking:
 
     def update(self, ants):
         my_ants = ants.my_ants()
+        # if the ant is no longer in my ants, delete it
+        self.ants_to_loc = {ant: loc for ant, loc in self.ants_to_loc.items() if loc in my_ants}
+        self.loc_to_ants = {loc: ant for loc, ant in self.loc_to_ants.items() if loc in my_ants}
 
         # if the ant is not yet in the dictionary, add it
         for ant_loc in my_ants:
@@ -44,9 +46,4 @@ class Tracking:
                 self.ants_to_loc[self.num_ants] = ant_loc
                 self.num_ants += 1
 
-        # if the ant is no longer in my ants, delete it
-        for ant in range(len(self.ants_to_loc) - 1):
-            if self.ants_to_loc[ant] not in my_ants:
-                loc = self.ants_to_loc[ant]
-                del self.ants_to_loc[ant]
-                del self.loc_to_ants[loc]
+
