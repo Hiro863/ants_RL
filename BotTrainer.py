@@ -23,13 +23,13 @@ q_: Q*(s', a'), numpy array [num_acts] (for all a)
 import tensorflow as tf
 import numpy as np
 import random
-import os.path
+import os
 import pickle
 from storage import TrainingStorage
 
 # File names
 pickle_file = 'dummy_data.p'
-weights_file = 'tools/weights/model.ckpt'
+weights_file = 'model.ckpt'
 weights_dir = 'tools/weights'
 
 # Input
@@ -60,28 +60,15 @@ num_acts = 5
 gamma = 0.9
 batch_size = 5
 l_rate = 0.1
-epoch = 100
+epoch = 10
 
 
-def get_data():
-    '''
-    if os.path.isfile(pickle_file):
-        data = pickle.load(open(pickle_file, "rb"))
-        print('pickle loaded')
-    else:
-        print('no pickle file')
-        return None
-    '''
-    # Convert from (s, a, r) format to (s, a, r, s_)
-    # TODO: should it take more previous movements into account?
+def process_data(data):
     data_s = []
 
-    trainingstorage = TrainingStorage()
-    data = list(trainingstorage.items())
-
-    for i, (s, a, r, turn) in enumerate(data):
+    for i, (s, a, r) in enumerate(data):
         if i + 1 < len(data):
-            data_s.append((s, a, r, data[i+1][0]))      #data[i+1][0] is s_
+            data_s.append((s, a, r, data[i + 1][0]))  # data[i+1][0] is s_
 
     # Create minibatches
     minibatches = []
@@ -105,6 +92,35 @@ def get_data():
         s_batch_ = np.reshape(s_batch_, (batch_size, map_width, map_height, num_chan))
 
         batches.append((s_batch, a_batch, r_batch, s_batch_))
+    return batches
+
+
+def get_data():
+
+    trainingstorage = TrainingStorage()
+    #all_data = list(trainingstorage.items())
+    all_data = pickle.load(open(pickle_file, "rb"))
+
+    # Sort data according to label of ants
+    sorted_data = []
+    labels = []
+    for (s, a, r, turn, label) in all_data:
+
+        # Check for new ants
+        if label not in labels:
+            labels.append(label)
+            ant_data = []
+            sorted_data.append(ant_data)
+
+        for index in range(len(labels)):
+            if label == index:
+                sorted_data[label].append((s, a, r))
+
+    # Preprocess data and create batches
+    batches = []
+    for ant_data in sorted_data:
+        ant_batches = process_data(ant_data)
+        batches.append(ant_batches)
 
     return batches
 
@@ -113,10 +129,10 @@ def create_network():
     # Placeholders for s
     s = tf.placeholder(tf.float32, shape=[None, map_width, map_height, num_chan])
 
-    def conv_layer(in_data, in_chan, out_chan):
-        w_conv = tf.Variable(tf.truncated_normal([3, 3, in_chan, out_chan], stddev=0.1))
-        b_conv = tf.Variable(tf.constant(0.1, shape=[out_chan]))
-        return tf.nn.relu(tf.nn.conv2d(in_data, w_conv, strides=[1,1,1,1], padding='SAME') + b_conv)
+    def conv_layer(in_data, in_chan, out_chan, name):
+        w_conv = tf.Variable(tf.truncated_normal([3, 3, in_chan, out_chan], stddev=0.1), name='w_conv' + name)
+        b_conv = tf.Variable(tf.constant(0.1, shape=[out_chan]), name='b_conv' + name)
+        return tf.nn.relu(tf.nn.conv2d(in_data, w_conv, strides=[1,1,1,1], padding='SAME') + b_conv), w_conv, b_conv
 
     def pooling_layer(conv):
         h_pool = tf.nn.max_pool(conv,
@@ -126,35 +142,36 @@ def create_network():
         return h_pool
 
     def full_layer(in_data, num_neuron, num_out):
-        w_full = tf.Variable(tf.truncated_normal([num_neuron, num_out]))
-        b_full = tf.Variable(tf.constant(0.1, shape=[num_out]))
-        return tf.matmul(in_data, w_full) + b_full
+        w_full = tf.Variable(tf.truncated_normal([num_neuron, num_out]), name='w_full')
+        b_full = tf.Variable(tf.constant(0.1, shape=[num_out]), name='b_full')
+        return tf.matmul(in_data, w_full) + b_full, w_full, b_full
 
     # Convolutional layer 1, out:map_width x map_height x conv1_num_chan
-    conv1 = conv_layer(s, num_chan, conv1_out_num)
+    conv1, w_conv1, b_conv1 = conv_layer(s, num_chan, conv1_out_num, '1')
 
     # Pooling layer 1, out: pool1_width x pool1_height x conv1_out_num
     pool1 = pooling_layer(conv1)
 
     # Convolutional layer 2, out:pool1_width x pool1_height x conv2_out_num
-    conv2 = conv_layer(pool1, conv1_out_num, conv2_out_num)
+    conv2, w_conv2, b_conv2 = conv_layer(pool1, conv1_out_num, conv2_out_num, '2')
 
     # Pooling layer 2, out: pool2_width x pool2_height x conv2_out_num
     pool2 = pooling_layer(conv2)
 
     # Convolutional layer 3, out:pool2_width x pool2_height x conv3_out_num
-    conv3 = conv_layer(pool2, conv2_out_num, conv3_out_num)
+    conv3, w_conv3, b_conv3 = conv_layer(pool2, conv2_out_num, conv3_out_num, '3')
 
     # Pooling layer 3, out: pool3_width x pool3_height x conv3_out_num
     pool3 = pooling_layer(conv3)
 
     # Fully connected layer
-    q_s = full_layer(tf.layers.flatten(pool3), pool3_width * pool3_height * conv3_out_num, num_acts)
+    q_s, w_full, b_full = full_layer(tf.layers.flatten(pool3), pool3_width * pool3_height * conv3_out_num, num_acts)
 
-    return q_s, s
+    variables = (w_conv1, w_conv2, w_conv3, b_conv1, b_conv2, b_conv3, w_full, b_full)
+    return q_s, s, variables
 
 
-def train_network(q_s, s, sess, batches):
+def train_network(q_s, s, sess, batches, variables):
     # Placeholders
     a = tf.placeholder(tf.float32, shape=[None, num_acts])
     y = tf.placeholder(tf.float32, shape=[None])
@@ -164,12 +181,25 @@ def train_network(q_s, s, sess, batches):
     loss = tf.reduce_mean(tf.square(y - q_s_a))
     train_step = tf.train.AdamOptimizer(l_rate).minimize(loss)
 
-    if not os.path.exists(weights_dir):
-        sess.run(tf.global_variables_initializer())
-    else:
+
+    w_conv1, w_conv2, w_conv3, b_conv1, b_conv2, b_conv3, w_full, b_full = variables
+
+    # initialize
+    sess.run(tf.global_variables_initializer())
+    print('initialized')
+
+    if os.path.exists(weights_dir):
         # Load weight
-        saver = tf.train.Saver()
-        saver.restore(sess, weights_file)
+        saver = tf.train.Saver({'w_conv1': w_conv1,
+                                'w_conv2': w_conv2,
+                                'w_conv3': w_conv3,
+                                'b-conv1': b_conv1,
+                                'b_conv2': b_conv2,
+                                'b_conv3': b_conv3,
+                                'w_full': w_full,
+                                'b_full': b_full})
+        path = os.path.join(weights_dir, weights_file)
+        saver.restore(sess, path)
         print('Weights loaded')
 
     # Training
@@ -187,3 +217,6 @@ def train_network(q_s, s, sess, batches):
 
         loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
         print('Epoch: %d, Loss: %f' % (i, loss_val))
+
+
+get_data()
