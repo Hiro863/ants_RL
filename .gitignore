@@ -4,5 +4,4 @@ __pycache__/
 .idea
 game_logs/
 .ipynb_checkpoints
-*.ipynb
 ants_obj/
