@@ -4,10 +4,9 @@ from pickle import Pickler, Unpickler
 import numpy as np
 import math
 import os
-from antutils import log
 
 
-class TrainingData:
+class TrainingStorage:
     def __init__(self, file='training.p', remove=False):
         self.path = os.path.join(os.path.dirname(__file__), file)
         if remove and os.path.isfile(self.path):
@@ -23,7 +22,7 @@ class TrainingData:
             water[row, col] = 1
 
         food = sparse.lil_matrix(dims, dtype=np.dtype('b'))
-        for row, col in zip(*np.where(m == -4)):
+        for row, col in zip(*np.where(m == -3)):
             food[row, col] = 1
 
         enemy_ants = sparse.lil_matrix(dims, dtype=np.dtype('b'))
@@ -63,21 +62,21 @@ class TrainingData:
 
         return state
 
-    def append(self, state=None, ants=None, ant_loc=None):
+    def remember(self, state, action, reward, turn):
         with open(self.path, 'ab+') as f:
-            if not state:
-                state = self.state(ants, ant_loc)
-            Pickler(f).dump(state)
+            data = state, action, reward, turn
+            Pickler(f).dump(data)
 
     def items(self):
         with open(self.path, 'rb') as f:
             unpickler = Unpickler(f)
             try:
                 while True:
+                    sparse_state, action, reward, turn = unpickler.load()
                     state = []
-                    for sparsemat in unpickler.load():
-                        state.append(sparsemat.toarray())
+                    for sparse_state_channel in sparse_state:
+                        state.append(sparse_state_channel.toarray())
 
-                    yield state
+                    yield state, action, reward, turn
             except EOFError:
                 pass
