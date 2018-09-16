@@ -50,7 +50,7 @@ class MyBot:
             self.history[self.turn] = [(state, action)]
 
         expired = (key for key in self.history.keys() if key <= (self.turn - self.history_length))
-        for turn in expired:
+        for turn in list(expired):
             del self.history[turn]
 
     @logexcept
