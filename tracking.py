@@ -1,3 +1,5 @@
+from antutils import log
+
 '''
 Keeps track of which ant moved where
 Each ant is identified by integer starting from 0
@@ -10,31 +12,38 @@ class Tracking:
         self.loc_to_ants = {}
         self.ants_to_loc = {}
         self.num_ants = 0
+        self.last_turn_moves = []
 
     def move_ant(self, loc, direc, ants):
-        # Get new location of the moved ant
-        if direc == 'n':
-            new_loc = (loc[0] - 1, loc[1])
-        elif direc == 'e':
-            new_loc = (loc[0], loc[1] + 1)
-        elif direc == 's':
-            new_loc = (loc[0] + 1, loc[1])
-        else:
-            new_loc = (loc[0], loc[1] - 1)
+        # store the moves that will be applied later
+        new_loc = ants.destination(loc, direc)
 
-        # Update loc_to_ants
-        ant = self.loc_to_ants[loc]
-        del self.loc_to_ants[loc]
-        self.loc_to_ants[new_loc] = ant
+        # procceed only if ant wants to move into accessible location (anything but not water)
+        if (ants.passable(new_loc)):
+            self.last_turn_moves.append((loc, new_loc, direc))
+            ants.issue_order((loc, direc))
 
-        # Update ants_to_loc
-        self.ants_to_loc[ant] = new_loc
+    def apply_last_moves(self):
+        # apply the stored moves
+        loc_to_ants_new = {}
+        for old_loc, new_loc, direc in self.last_turn_moves:
+            # Pop the ant label from dictionary and save it to new one
+            ant = self.loc_to_ants.pop(old_loc)
+            loc_to_ants_new[new_loc] = ant
 
-        # Move the ant
-        ants.issue_order((loc, direc))
+            # Update ants_to_loc
+            self.ants_to_loc[ant] = new_loc
+
+        # Add ants that have not moved to the new dictionary
+        loc_to_ants_new.update(self.loc_to_ants)
+        # Make that dictionary a current one
+        self.loc_to_ants = loc_to_ants_new
+        # Forget moves for this turn
+        self.last_turn_moves = []
 
     def update(self, ants):
         my_ants = ants.my_ants()
+        self.apply_last_moves()
         # if the ant is no longer in my ants, delete it
         self.ants_to_loc = {ant: loc for ant, loc in self.ants_to_loc.items() if loc in my_ants}
         self.loc_to_ants = {loc: ant for loc, ant in self.loc_to_ants.items() if loc in my_ants}

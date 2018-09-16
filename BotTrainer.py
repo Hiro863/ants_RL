@@ -217,6 +217,3 @@ def train_network(q_s, s, sess, batches, variables):
 
         loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
         print('Epoch: %d, Loss: %f' % (i, loss_val))
-
-
-get_data()

@@ -3,7 +3,7 @@ from __future__ import division
 from ants import Ants
 import os
 from storage import TrainingStorage
-from antutils import logexcept, DEBUG_LOG
+from antutils import logexcept, DEBUG_LOG, log
 from BotDecisionMaker import DecisionMaker
 import numpy as np
 from tracking import Tracking
@@ -58,8 +58,7 @@ class MyBot:
         self.turn += 1
         if not self.tracking:
             self.tracking = Tracking()
-
-        #self.tracking.update(ants)
+        self.tracking.update(ants)
 
         for ant_loc in ants.my_ants():
             state = self.storage.state(ants, ant_loc)
@@ -69,6 +68,12 @@ class MyBot:
             # remember what have we done this turn
             label = self.tracking.loc_to_ants[ant_loc]
             self.append_history(state, direction_onehot, label)
+
+            if direction != 'r':
+                new_loc = ants.destination(ant_loc, direction)
+            else:
+                new_loc = ant_loc
+            log((self.turn, 'Moving ant ', ant_loc, ' to ', new_loc))
 
             if direction != 'r':
                 self.tracking.move_ant(ant_loc, direction, ants)
