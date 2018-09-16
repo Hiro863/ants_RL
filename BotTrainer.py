@@ -26,7 +26,6 @@ import random
 import os.path
 import pickle
 
-# TODO: whats the relationship between the rewards and each movement? what about movements within a turn
 # File names
 pickle_file = 'dummy_data.p'
 weights_file = 'tools/weights/model.ckpt'

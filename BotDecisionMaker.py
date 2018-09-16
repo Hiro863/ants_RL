@@ -24,7 +24,7 @@ num_chan = 7
 num_acts = 5
 
 # Reinforcement learning parameters
-init_epsilon = 0.05
+init_epsilon = 0.3
 fin_epsilon = 0.05
 explore = 500
 
@@ -74,12 +74,4 @@ class DecisionMaker:
             return a
 
 
-'''
-batches = get_data()
-batch = batches[0]
-single_data = batch[0]
-state = single_data[0]
-dmaker = DecisionMaker()
-a = dmaker.make_decision(state)
-print(a)
-'''
+
