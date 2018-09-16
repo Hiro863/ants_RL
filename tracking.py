@@ -11,7 +11,7 @@ class Tracking:
         self.loc_to_ants = {}
         self.ants_to_loc = {}
         self.num_ants = 0
-        self.update(self, ants)
+        self.update(ants)
 
     def move_ant(self, loc, direc, ants):
         # Get new location of the moved ant
@@ -46,7 +46,7 @@ class Tracking:
                 self.num_ants += 1
 
         # if the ant is no longer in my ants, delete it
-        for ant in range(len(self.ants_to_loc) - 1):
+        for ant in list(self.ants_to_loc.keys()):
             if self.ants_to_loc[ant] not in my_ants:
                 loc = self.ants_to_loc[ant]
                 del self.ants_to_loc[ant]
