@@ -11,7 +11,6 @@ class Tracking:
         self.loc_to_ants = {}
         self.ants_to_loc = {}
         self.num_ants = 0
-        self.update(self, ants)
 
     def move_ant(self, loc, direc, ants):
         # Get new location of the moved ant

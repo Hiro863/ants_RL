@@ -20,7 +20,9 @@ def train_session():
 
     # Train Network
     print('Training...')
-    train_network(q_s, s, sess, batches)
+    for i, ant_batches in enumerate(batches):
+        print('Training %d th ant data: ' % i)
+        train_network(q_s, s, sess, ant_batches)
 
     # Save the weights
     saver = tf.train.Saver()
