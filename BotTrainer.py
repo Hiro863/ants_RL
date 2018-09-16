@@ -25,6 +25,7 @@ import numpy as np
 import random
 import os.path
 import pickle
+from storage import TrainingStorage
 
 # File names
 pickle_file = 'dummy_data.p'
@@ -63,18 +64,22 @@ epoch = 100
 
 
 def get_data():
+    '''
     if os.path.isfile(pickle_file):
         data = pickle.load(open(pickle_file, "rb"))
         print('pickle loaded')
     else:
         print('no pickle file')
         return None
-
+    '''
     # Convert from (s, a, r) format to (s, a, r, s_)
     # TODO: should it take more previous movements into account?
     data_s = []
 
-    for i, (s, a, r) in enumerate(data):
+    trainingstorage = TrainingStorage()
+    data = list(trainingstorage.items())
+
+    for i, (s, a, r, turn) in enumerate(data):
         if i + 1 < len(data):
             data_s.append((s, a, r, data[i+1][0]))      #data[i+1][0] is s_
 
