@@ -57,9 +57,9 @@ class MyBot:
     def do_turn(self, ants):
         self.turn += 1
         if not self.tracking:
-            self.tracking = Tracking(ants)
-        else:
-            self.tracking.update(ants)
+            self.tracking = Tracking()
+
+        #self.tracking.update(ants)
 
         for ant_loc in ants.my_ants():
             state = self.storage.state(ants, ant_loc)
