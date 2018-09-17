@@ -6,6 +6,7 @@ Each ant is identified by integer starting from 0
 Needs to be updated at the beginning of every turn
 
 '''
+from math import sqrt
 
 class Tracking:
     def __init__(self):
@@ -87,8 +88,34 @@ class Tracking:
 
     def killed(self, label):
 
-
         return is_killed
+
+
+    def visible_to_ant(self, loc, ant_loc, ants):
+        # determine which squares are visible to the ant
+
+        if ants.vision == None:
+            if not hasattr(ants, 'vision_offsets_2'):
+                # precalculate squares around an ant to set as visible
+                ants.vision_offsets_2 = []
+                mx = int(sqrt(ants.viewradius2))
+                for d_row in range(-mx, mx + 1):
+                    for d_col in range(-mx, mx + 1):
+                        d = d_row ** 2 + d_col ** 2
+                        if d <= ants.viewradius2:
+                            ants.vision_offsets_2.append((
+                                d_row % ants.rows - ants.rows,
+                                d_col % ants.cols - ants.cols
+                            ))
+
+            # set all spaces as not visible
+            # loop through ants and set all squares around ant as visible
+            ants.vision = [[False] * ants.cols for row in range(ants.rows)]
+            row, col = ant_loc
+            for v_row, v_col in self.vision_offsets_2:
+                ants.vision[row + v_row][col + v_col] = True
+        row, col = loc
+        return ants.vision[row][col]
 
 # Debug
 '''''''''''
