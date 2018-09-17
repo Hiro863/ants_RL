@@ -60,14 +60,14 @@ class Tracking:
                 self.num_ants += 1
 
 
-    def found_food(self, new_loc, ants):
+    def found_food(self, ant_loc, new_loc, ants):
         # check if it found the food
         # new_loc is destination of the
 
         # create a list of visible foods
         visible_foods = []
         for food in ants.food():
-            if self.visible_to_ant(food):
+            if self.visible_to_ant(food, ant_loc, ants):
                 visible_foods.append(food)
 
         # check if the ants steps on foods
