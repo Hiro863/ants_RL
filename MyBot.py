@@ -93,7 +93,7 @@ class MyBot:
             for prev_state, prev_action, prev_label in self.history[self.turn - offset]:
                 self.storage.remember(
                     prev_state, prev_action,
-                    self.reward(food_found), prev_label,
+                    self.reward(is_killed, food_found), prev_label,
                     self.turn - offset
                 )
 
