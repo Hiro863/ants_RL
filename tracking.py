@@ -64,11 +64,9 @@ class Tracking:
         # new_loc is destination of the
 
         # create a list of visible foods
-        # TODO: This actually lists the visible foods to ALL ants, not just this one
-        # TODO: Make this more efficient
         visible_foods = []
         for food in ants.food():
-            if ants.visible(food):
+            if self.visible_to_ant(food):
                 visible_foods.append(food)
 
         # check if the ants steps on foods
