@@ -24,6 +24,8 @@ class Tracking:
             ants.issue_order((loc, direc))
             return self.found_food(new_loc, ants)
 
+        return False
+
     def apply_last_moves(self):
         # apply the stored moves
         loc_to_ants_new = {}
