@@ -14,7 +14,7 @@ weights_file = 'weights/model.ckpt'
 
 # Input
 input_size = 16
-num_chan = 7
+num_chan = 6
 
 # Output
 num_acts = 5
