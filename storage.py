@@ -5,6 +5,7 @@ import numpy as np
 import math
 import os
 
+input_size = 16
 
 class TrainingStorage:
     def __init__(self, file='training.p', remove=False):
@@ -80,3 +81,34 @@ class TrainingStorage:
                     yield state, action, reward, label, turn
             except EOFError:
                 pass
+
+    def map_convert(self, ant_loc, ants, m):
+        # determine which squares are visible to the ant
+        # precalculate squares around an ant to set as visible
+        # ant is located at (8, 8)
+        # TODO: I ignored the corners (so there is no -1)
+
+        a_row, a_col = ant_loc
+        new_map = np.array((input_size, input_size), dtype=np.dtype('b'))
+
+        # copy the m to new_map
+        # coordinate starts at the top left
+        for row in range(input_size):
+            for col in range(input_size):
+                # find coordinates (m_row, m_col)
+                # find corresponding (row, col) in new_map
+                if a_row - 8 + row >= 0:  # inside the map
+                    m_row = a_row - 8 + row  # go back 8, then start counting downwards
+                else:  # not in the map
+                    neg_row = a_row - 8 + row  # neg_row is negative
+                    m_row = ants.rows + neg_row  # add the negative row to map row number
+
+                if a_col - 8 + col >= 0:  # inside the map
+                    m_col = a_col - 8 + col  # go back 8, then start counting rightwards
+                else:
+                    neg_col = a_col - 8 + col  # neg_col is negative
+                    m_col = ants.cols + neg_col  # add the negative col to map col number
+
+                new_map[row][col] = m[m_row][m_col]  # copy the content
+
+        return new_map
