@@ -82,6 +82,11 @@ class Tracking:
         else:
             return False
 
+    def killed(self, label):
+
+
+        return is_killed
+
 # Debug
 '''''''''''
 import random
