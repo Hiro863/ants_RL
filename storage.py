@@ -13,7 +13,7 @@ class TrainingStorage:
         if remove and os.path.isfile(self.path):
             os.remove(self.path)
 
-    def map_state(self, ants):
+    def state(self, ants, ant_loc):
         # some data can be retrieved from map property
         dims = int(math.ceil(ants.rows / 8) * 8), int(math.ceil(ants.cols / 8) * 8)
         m = np.array(ants.map, dtype=np.dtype('b'))
@@ -54,14 +54,6 @@ class TrainingStorage:
         current_ant[arow, acol] = 1
 
         return current_ant
-
-    def state(self, ants, ant_loc):
-        dims = int(math.ceil(ants.rows / 8) * 8), int(math.ceil(ants.cols / 8) * 8)
-        current_ant = self.current_ant(dims, ant_loc)
-        state = self.map_state(ants)
-        state.insert(0, current_ant)
-
-        return state
 
     def remember(self, state, action, reward, label, turn):
         with open(self.path, 'ab+') as f:
