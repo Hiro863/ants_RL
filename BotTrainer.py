@@ -35,25 +35,21 @@ weights_dir = 'tools/weights'
 
 
 # Input
-map_width = 48
-map_height = 40
+input_size = 16
 num_chan = 7
 
 # Layer 1
 # Map size must be multiples of 8
 conv1_out_num = 32
-pool1_width = int(map_width / 2)
-pool1_height = int(map_height / 2)
+pool1_size = int(input_size / 2)
 
 # Layer 2
 conv2_out_num = 64
-pool2_width = int(pool1_width / 2)
-pool2_height = int(pool1_height / 2)
+pool2_size = int(pool1_size / 2)
 
 # Layer 3
 conv3_out_num = 64
-pool3_width = int(pool2_width / 2)
-pool3_height = int(pool2_height / 2)
+pool3_size = int(pool2_size / 2)
 
 # Output
 num_acts = 5
@@ -88,10 +84,10 @@ def process_data(data):
         r_batch = np.array([single_data[2] for single_data in minibatch])
         s_batch_ = np.array([single_data[3] for single_data in minibatch])
 
-        s_batch = np.reshape(s_batch, (batch_size, map_width, map_height, num_chan))
+        s_batch = np.reshape(s_batch, (batch_size, input_size, input_size, num_chan))
         a_batch = np.reshape(a_batch, (batch_size, num_acts))
         r_batch = np.reshape(r_batch, (batch_size, 1))
-        s_batch_ = np.reshape(s_batch_, (batch_size, map_width, map_height, num_chan))
+        s_batch_ = np.reshape(s_batch_, (batch_size, input_size, input_size, num_chan))
 
         batches.append((s_batch, a_batch, r_batch, s_batch_))
     return batches
@@ -130,7 +126,7 @@ def get_data():
 
 def create_network():
     # Placeholders for s
-    s = tf.placeholder(tf.float32, shape=[None, map_width, map_height, num_chan])
+    s = tf.placeholder(tf.float32, shape=[None, input_size, input_size, num_chan])
 
     def conv_layer(in_data, in_chan, out_chan, name):
         w_conv = tf.Variable(tf.truncated_normal([3, 3, in_chan, out_chan], stddev=0.1), name='w_conv' + name)
@@ -168,7 +164,7 @@ def create_network():
     pool3 = pooling_layer(conv3)
 
     # Fully connected layer
-    q_s, w_full, b_full = full_layer(tf.layers.flatten(pool3), pool3_width * pool3_height * conv3_out_num, num_acts)
+    q_s, w_full, b_full = full_layer(tf.layers.flatten(pool3), pool3_size * pool3_size * conv3_out_num, num_acts)
 
     variables = (w_conv1, w_conv2, w_conv3, b_conv1, b_conv2, b_conv3, w_full, b_full)
     return q_s, s, variables

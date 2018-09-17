@@ -13,8 +13,7 @@ from BotTrainer import create_network
 weights_file = 'weights/model.ckpt'
 
 # Input
-map_width = 48
-map_height = 40
+input_size = 16
 num_chan = 7
 
 # Output
@@ -53,7 +52,7 @@ class DecisionMaker:
     def make_decision(self, s_in):
         # action one-hot vector
         a = np.zeros(num_acts)
-        s_in = np.reshape(s_in, (1, map_width, map_height, num_chan))
+        s_in = np.reshape(s_in, (1, input_size, input_size, num_chan))
 
         # Move randomly if first time, else move according to learnt strategy
         if not self.is_weights:
