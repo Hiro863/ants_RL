@@ -52,7 +52,6 @@ class DecisionMaker:
     def make_decision(self, s_in):
         # action one-hot vector
         a = np.zeros(num_acts)
-        s_in = np.reshape(s_in, (1, input_size, input_size, num_chan))
 
         # Move randomly if first time, else move according to learnt strategy
         if not self.is_weights:
@@ -61,6 +60,9 @@ class DecisionMaker:
             return a
 
         else:
+            # Reshape input
+            s_in = np.reshape(s_in, (1, input_size, input_size, num_chan))
+
             # epsilon to make sure further learning
             epsilon = init_epsilon
 
