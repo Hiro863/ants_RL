@@ -23,6 +23,8 @@ class Tracking:
             self.last_turn_moves.append((loc, new_loc, direc))
             ants.issue_order((loc, direc))
 
+        return self.found_food(new_loc, ants)
+
     def apply_last_moves(self):
         # apply the stored moves
         loc_to_ants_new = {}

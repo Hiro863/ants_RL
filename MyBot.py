@@ -76,7 +76,7 @@ class MyBot:
             log((self.turn, 'Moving ant ', ant_loc, ' to ', new_loc))
 
             if direction != 'r':
-                self.tracking.move_ant(ant_loc, direction, ants)
+                food_found = self.tracking.move_ant(ant_loc, direction, ants)
 
             if ants.time_remaining() < 10:
                 break
@@ -88,7 +88,7 @@ class MyBot:
             for prev_state, prev_action, prev_label in self.history[self.turn - offset]:
                 self.storage.remember(
                     prev_state, prev_action,
-                    self.reward(state), prev_label,
+                    self.reward(food_found), prev_label,
                     self.turn - offset
                 )
 
