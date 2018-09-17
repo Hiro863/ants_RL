@@ -10,7 +10,7 @@ import os.path
 from BotTrainer import create_network
 
 # File names
-weights_file = 'tools/weights/model.ckpt'
+weights_file = 'weights/model.ckpt'
 
 # Input
 map_width = 48
@@ -34,7 +34,6 @@ class DecisionMaker:
         self.sess.run(tf.global_variables_initializer())
 
         # Load weight
-
         if os.path.exists(weights_file):
             w_conv1, w_conv2, w_conv3, b_conv1, b_conv2, b_conv3, w_full, b_full = variables
 
@@ -49,7 +48,7 @@ class DecisionMaker:
 
             saver.restore(self.sess, weights_file)
             self.is_weights = True
-            print('Weights loaded')
+
 
     def make_decision(self, s_in):
         # action one-hot vector
