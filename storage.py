@@ -15,15 +15,18 @@ class TrainingStorage:
 
     def state(self, ants, ant_loc):
         # some data can be retrieved from map property
-        dims = int(math.ceil(ants.rows / 8) * 8), int(math.ceil(ants.cols / 8) * 8)
+        dims = (input_size, input_size)
         m = np.array(ants.map, dtype=np.dtype('b'))
 
+        # convert the map to input_size x input_size window
+        new_m = self.map_convert(ant_loc, ants, m)
+
         water = sparse.lil_matrix(dims, dtype=np.dtype('b'))
-        for row, col in zip(*np.where(m == -4)):
+        for row, col in zip(*np.where(new_m == -4)):
             water[row, col] = 1
 
         food = sparse.lil_matrix(dims, dtype=np.dtype('b'))
-        for row, col in zip(*np.where(m == -3)):
+        for row, col in zip(*np.where(new_m == -3)):
             food[row, col] = 1
 
         enemy_ants = sparse.lil_matrix(dims, dtype=np.dtype('b'))
@@ -102,5 +105,25 @@ class TrainingStorage:
                     m_col = ants.cols + neg_col  # add the negative col to map col number
 
                 new_map[row][col] = m[m_row][m_col]  # copy the content
-
         return new_map
+
+    def loc_convert(self, ant_loc, ants, m_loc):
+        a_row, a_col = ant_loc
+        m_row, m_col = m_loc
+
+        # find origin
+        if a_row - 8 >= 0:
+            o_row = a_row - 8
+        else:
+            o_row = ants.rows + (a_row - 8)
+        if a_col - 8 >= 0:
+            o_col = a_col - 8
+        else:
+            o_col = ants.cols + (a_row - 8)
+
+        # origin is:
+        # not near the bottom
+        row = m_row - o_row
+        col = m_col - o_col
+
+        return row, col
