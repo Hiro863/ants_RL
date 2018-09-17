@@ -28,9 +28,11 @@ import pickle
 from storage import TrainingStorage
 
 # File names
-pickle_file = 'dummy_data.p'
+pickle_file = 'training.p'
+pickle_debug = 'dummy_data_big.p'
 weights_file = 'model.ckpt'
 weights_dir = 'tools/weights'
+
 
 # Input
 map_width = 48
@@ -98,13 +100,14 @@ def process_data(data):
 def get_data():
 
     trainingstorage = TrainingStorage()
-    #all_data = list(trainingstorage.items())
-    all_data = pickle.load(open(pickle_file, "rb"))
+    if os.path.exists(pickle_file):
+        all_data = list(trainingstorage.items())
+    #all_data = pickle.load(open(pickle_debug, "rb"))
 
     # Sort data according to label of ants
     sorted_data = []
     labels = []
-    for (s, a, r, turn, label) in all_data:
+    for (s, a, r, label, turn) in all_data:
 
         # Check for new ants
         if label not in labels:
