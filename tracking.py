@@ -110,7 +110,7 @@ class Tracking:
             # loop through ants and set all squares around ant as visible
             ants.vision = [[False] * ants.cols for row in range(ants.rows)]
             row, col = ant_loc
-            for v_row, v_col in self.vision_offsets_2:
+            for v_row, v_col in ants.vision_offsets_2:
                 ants.vision[row + v_row][col + v_col] = True
         row, col = loc
         return ants.vision[row][col]
