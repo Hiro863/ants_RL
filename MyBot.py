@@ -88,7 +88,7 @@ class MyBot:
 
         # we need to know the outcome before we calculate the reward
         # thats why only previous turn is stored
-        offset = 2
+        offset = 1
         if len(self.history) > offset:
             for prev_state, prev_action, prev_label in self.history[self.turn - offset]:
                 self.storage.remember(
