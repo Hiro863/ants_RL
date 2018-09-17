@@ -82,6 +82,8 @@ class MyBot:
 
             if direction != 'r':
                 food_found = self.tracking.move_ant(ant_loc, direction, ants)
+            else:
+                food_found = False
 
             if ants.time_remaining() < 10:
                 break
