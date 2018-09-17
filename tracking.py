@@ -14,6 +14,7 @@ class Tracking:
         self.ants_to_loc = {}
         self.num_ants = 0
         self.last_turn_moves = []
+        self.vision
 
     def move_ant(self, loc, direc, ants):
         # store the moves that will be applied later
@@ -59,6 +60,8 @@ class Tracking:
                 self.ants_to_loc[self.num_ants] = ant_loc
                 self.num_ants += 1
 
+        self.vision == None
+
     def found_food(self, new_loc, ants):
         # check if it found the food
         # new_loc is destination of the
@@ -91,29 +94,32 @@ class Tracking:
 
     def visible_to_ant(self, loc, ant_loc, ants):
         # determine which squares are visible to the ant
+        rows = ants.rows
+        cols = ants.cols
+        viewradius2 = ants.viewradius2
 
-        if ants.vision == None:
-            if not hasattr(ants, 'vision_offsets_2'):
-                # precalculate squares around an ant to set as visible
-                ants.vision_offsets_2 = []
-                mx = int(sqrt(ants.viewradius2))
-                for d_row in range(-mx, mx + 1):
-                    for d_col in range(-mx, mx + 1):
-                        d = d_row ** 2 + d_col ** 2
-                        if d <= ants.viewradius2:
-                            ants.vision_offsets_2.append((
-                                d_row % ants.rows - ants.rows,
-                                d_col % ants.cols - ants.cols
-                            ))
+        # precalculate squares around an ant to set as visible
+        if self.vision == None:
+            vision_offsets_2 = []
+            mx = int(sqrt(viewradius2))
+            for d_row in range(-mx, mx + 1):
+                for d_col in range(-mx, mx + 1):
+                    d = d_row ** 2 + d_col ** 2
+                    if d <= viewradius2:
+                        vision_offsets_2.append((
+                            d_row % rows - rows,
+                            d_col % cols - cols
+                        ))
 
             # set all spaces as not visible
             # loop through ants and set all squares around ant as visible
-            ants.vision = [[False] * ants.cols for row in range(ants.rows)]
+            self.vision = [[False] * cols for row in range(rows)]
             row, col = ant_loc
-            for v_row, v_col in ants.vision_offsets_2:
-                ants.vision[row + v_row][col + v_col] = True
+            for v_row, v_col in vision_offsets_2:
+                self.vision[row + v_row][col + v_col] = True
+
         row, col = loc
-        return ants.vision[row][col]
+        return self.vision[row][col]
 
 # Debug
 '''''''''''
