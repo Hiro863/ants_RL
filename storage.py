@@ -86,7 +86,7 @@ class TrainingStorage:
         # TODO: I ignored the corners (so there is no -1)
 
         a_row, a_col = ant_loc
-        new_map = np.array((input_size, input_size), dtype=np.dtype('b'))
+        new_map = np.zeros(shape=(input_size, input_size), dtype=np.dtype('b'))
 
         # copy the m to new_map
         # coordinate starts at the top left
@@ -106,7 +106,7 @@ class TrainingStorage:
                     neg_col = a_col - 8 + col  # neg_col is negative
                     m_col = ants.cols + neg_col  # add the negative col to map col number
 
-                new_map[row][col] = m[m_row][m_col]  # copy the content
+                new_map[row, col] = m[m_row, m_col]  # copy the content
         return new_map
 
     def loc_convert(self, ant_loc, ants, m_loc):
