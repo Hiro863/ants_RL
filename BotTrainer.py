@@ -36,7 +36,7 @@ weights_dir = 'tools/weights'
 
 # Input
 input_size = 16
-num_chan = 7
+num_chan = 6
 
 # Layer 1
 # Map size must be multiples of 8
