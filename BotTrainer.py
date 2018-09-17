@@ -95,6 +95,7 @@ def process_data(data):
 
 def get_data():
 
+    # TODO: need to handle exception
     trainingstorage = TrainingStorage()
     if os.path.exists(pickle_file):
         all_data = list(trainingstorage.items())
