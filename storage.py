@@ -37,17 +37,19 @@ class TrainingStorage:
 
         # rest is retrieved by iterating over ant_list
         for (row, col), owner in ants.ant_list.items():
+            new_row, new_col = self.loc_convert(ant_loc, ants, (row, col))
             if owner != 0:
-                enemy_ants[row, col] = 1
+                enemy_ants[new_row, new_col] = 1
             else:
-                my_ants[row, col] = 1
+                my_ants[new_row, new_col] = 1
 
         # and over hill list
         for (row, col), owner in ants.hill_list.items():
+            new_row, new_col = self.loc_convert(ant_loc, ants, (row, col))
             if owner != 0:
-                enemy_hills[row, col] = 1
+                enemy_hills[new_row, new_col] = 1
             else:
-                my_hills[row, col] = 1
+                my_hills[new_row, new_col] = 1
 
         return [my_ants, my_hills, enemy_ants, enemy_hills, water, food]
 
