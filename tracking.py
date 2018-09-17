@@ -55,6 +55,33 @@ class Tracking:
                 self.ants_to_loc[self.num_ants] = ant_loc
                 self.num_ants += 1
 
+    def found_food(self, new_loc, ants):
+        # check if it found the food
+        # new_loc is destination of the
+
+        # create a list of visible foods
+        # TODO: This actually lists the visible foods to ALL ants, not just this one
+        # TODO: Make this more efficient
+        visible_foods = []
+        for food in ants.food():
+            if ants.visible(food):
+                visible_foods.append(food)
+
+        # check if the ants steps on foods
+        food_area = []
+        adjacent = ((-1, 0),
+                    (0, 1),
+                    (1, 0),
+                    (0, -1))
+        for f_r, f_c in visible_foods:
+            for a_r, a_c in adjacent:
+                food_area.append((f_r + a_r, f_c, a_c))
+
+        if new_loc in food_area:
+            return True
+        else:
+            return False
+
 # Debug
 '''''''''''
 import random
