@@ -37,9 +37,14 @@ class MyBot:
 
         return decision
 
-    def reward(self, state):
-        current_ant, my_ants, my_hills, enemy_ants, enemy_hills, water, food = state
-        reward = (my_ants == 1).sum()
+    def reward(self, is_killed, food_found):
+        # if both food_found and killed is True then reward = -100
+        if is_killed:
+            reward = -100
+        elif food_found:
+            reward = 1
+        else:
+            reward = 0
 
         return reward
 
