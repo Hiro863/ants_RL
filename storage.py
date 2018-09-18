@@ -2,7 +2,6 @@ from __future__ import division
 from scipy import sparse
 from pickle import Pickler, Unpickler
 import numpy as np
-import math
 import os
 
 input_size = 16
@@ -81,6 +80,7 @@ class TrainingStorage:
             except EOFError:
                 pass
 
+
     def map_convert(self, ant_loc, ants, m):
         # determine which squares are visible to the ant
         # precalculate squares around an ant to set as visible
@@ -90,44 +90,74 @@ class TrainingStorage:
         a_row, a_col = ant_loc
         new_map = np.zeros(shape=(input_size, input_size), dtype=np.dtype('b'))
 
-        # copy the m to new_map
-        # coordinate starts at the top left
+        # find origin
+        if a_row - 8 >= 0:  # inside the map
+            o_row = a_row - 8
+        else:  # outside the map
+            o_row = ants.rows + (a_row - 8)
+        if a_col - 8 >= 0:  # inside the map
+            o_col = a_col - 8
+        else:  # outside the map
+            o_col = ants.cols + (a_col - 8)
+
         for row in range(input_size):
             for col in range(input_size):
-                # find coordinates (m_row, m_col)
-                # find corresponding (row, col) in new_map
-                if a_row - 8 + row >= 0:  # inside the map
-                    m_row = a_row - 8 + row  # go back 8, then start counting downwards
-                else:  # not in the map
-                    neg_row = a_row - 8 + row  # neg_row is negative
-                    m_row = ants.rows + neg_row  # add the negative row to map row number
 
-                if a_col - 8 + col >= 0:  # inside the map
-                    m_col = a_col - 8 + col  # go back 8, then start counting rightwards
-                else:
-                    neg_col = a_col - 8 + col  # neg_col is negative
-                    m_col = ants.cols + neg_col  # add the negative col to map col number
+                m_row = o_row + row
+                m_col = o_col + col
+
+                if m_row >= ants.rows:
+                    m_row = m_row - ants.rows
+                if m_col >= ants.cols:
+                    m_col = m_col - ants.cols
 
                 new_map[row, col] = m[m_row, m_col]  # copy the content
+
         return new_map
+
 
     def loc_convert(self, ant_loc, ants, m_loc):
         a_row, a_col = ant_loc
         m_row, m_col = m_loc
 
         # find origin
-        if a_row - 8 >= 0:
+        if a_row - 8 >= 0:                      # inside the map
             o_row = a_row - 8
-        else:
+        else:                                   # outside the map
             o_row = ants.rows + (a_row - 8)
-        if a_col - 8 >= 0:
+        if a_col - 8 >= 0:                      # inside the map
             o_col = a_col - 8
-        else:
+        else:                                   # outside the map
             o_col = ants.cols + (a_row - 8)
 
         row = m_row - o_row
         col = m_col - o_col
-        if row > 16 or col > 16:
+        if row > 15 or row < 0 or col > 15 or col < 0:      # outside the roi
             return False, None, None
         else:
             return True, row, col
+
+
+'''
+# debug
+
+map = np.zeros(shape=(43, 39), dtype=np.dtype('b'))
+i = 0
+for row in range(43):
+    for col in range(39):
+        map[row, col] = i
+        i += 1
+
+print(map)
+class Ants:
+    def __init__(self):
+        self.rows = 43
+        self.cols = 39
+
+ants = Ants()
+
+storage = TrainingStorage()
+
+new_map = storage.map_convert((0,0), ants, map)
+
+print(new_map)'''
