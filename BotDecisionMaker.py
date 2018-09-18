@@ -28,18 +28,9 @@ explore = 500
 
 class DecisionMaker:
     def __init__(self):
-        pass
-
-
-
-    def make_decision(self, s_in):
-        # action one-hot vector
-        a = np.zeros(num_acts)
-
-        # TODO: Try to figure out how to avoid loading weights every time
-        q_s, s, variables = create_network()
-        sess = tf.Session()
-        sess.run(tf.global_variables_initializer())
+        self.q_s, self.s, variables = create_network()
+        self.sess = tf.Session()
+        self.sess.run(tf.global_variables_initializer())
 
         # Load weight
         w_conv1, w_conv2, w_conv3, b_conv1, b_conv2, b_conv3, w_full, b_full = variables
@@ -53,7 +44,15 @@ class DecisionMaker:
                                 'w_full': w_full,
                                 'b_full': b_full})
 
-        saver.restore(sess, weights_file)
+        saver.restore(self.sess, weights_file)
+
+
+
+    def make_decision(self, s_in):
+        # action one-hot vector
+        a = np.zeros(num_acts)
+
+
 
         # Reshape input
         s_in = np.reshape(s_in, (1, input_size, input_size, num_chan))
@@ -70,8 +69,9 @@ class DecisionMaker:
             if epsilon > fin_epsilon:
                 epsilon -= (init_epsilon - fin_epsilon) / explore
 
-            q = sess.run(q_s, feed_dict={s: s_in})
+            q = self.sess.run(self.q_s, feed_dict={self.s: s_in})
             a_index = np.argmax(q)
 
         a[a_index] = 1
+
         return a

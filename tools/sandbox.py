@@ -329,7 +329,7 @@ def _monitor_file(fd, q):
     while True:
         line = fd.readline()
         # Uncomment for inspecting stdout
-        # print(line, end='')
+        print(line, end='')
         if not line:
             q.put(None)
             break
