@@ -8,10 +8,13 @@ import numpy as np
 import random
 import os.path
 from BotTrainer import create_network
+from pickle import Pickler, Unpickler
 
 # File names
 # TODO: get paths sorted
 weights_file = '/Users/hiro/Documents/IT_and_Cognition/Scientific_Programming/aichallenge-epsilon/ants/ants_RL/tools/weights/model.ckpt'
+pickle_file = 'epsilon.p'
+
 
 # Input
 input_size = 16
@@ -21,7 +24,7 @@ num_chan = 6
 num_acts = 5
 
 # Reinforcement learning parameters
-init_epsilon = 0.5
+init_epsilon = 1.0
 fin_epsilon = 0.05
 explore = 500
 
@@ -46,8 +49,17 @@ class DecisionMaker:
 
         saver.restore(self.sess, weights_file)
 
-        # epsilon to make sure further learning
+
+        # set epsilon
         self.epsilon = init_epsilon
+        if os.path.exists(pickle_file):
+            with open(pickle_file, 'rb') as f:
+                unpickler = Unpickler(f)
+                try:
+                    self.epsilon = unpickler.load()
+                except EOFError:
+                    pass
+
 
 
     def make_decision(self, s_in):
@@ -73,3 +85,8 @@ class DecisionMaker:
         a[a_index] = 1
 
         return a
+
+
+    def save_epsilon(self):
+        with open(pickle_file, 'wb') as f:
+            Pickler(f).dump(self.epsilon)

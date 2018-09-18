@@ -96,6 +96,8 @@ class MyBot:
                     self.turn - offset
                 )
 
+        self.dmake.save_epsilon()
+
 
 if __name__ == '__main__':
     @logexcept
