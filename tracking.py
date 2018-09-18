@@ -78,17 +78,19 @@ class Tracking:
                     (0, -1))
         for f_r, f_c in visible_foods:
             for a_r, a_c in adjacent:
-                food_area.append((f_r + a_r, f_c, a_c))
+                if ants.passable((f_r + a_r, f_c + a_c)):
+                    food_area.append((f_r + a_r, f_c + a_c))
 
         if new_loc in food_area:
             return True
         else:
             return False
-
+    '''
     def killed(self, label):
 
         return is_killed
 
+    '''
 
     def visible_to_ant(self, loc, ant_loc, ants):
         # determine which squares are visible to the ant
