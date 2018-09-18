@@ -7,6 +7,7 @@ Needs to be updated at the beginning of every turn
 
 '''
 from math import sqrt
+FOOD = -3
 
 class Tracking:
     def __init__(self):
@@ -23,9 +24,9 @@ class Tracking:
         if (ants.passable(new_loc)):
             self.last_turn_moves.append((loc, new_loc, direc))
             ants.issue_order((loc, direc))
-            return self.found_food(loc, new_loc, ants)
-
-        return False
+            return self.adjacent_food(new_loc, ants)
+        else:
+            return self.adjacent_food(loc, ants)
 
     def apply_last_moves(self):
         # apply the stored moves
@@ -59,32 +60,26 @@ class Tracking:
                 self.ants_to_loc[self.num_ants] = ant_loc
                 self.num_ants += 1
 
+    def iter_adjacent(self, loc):
+        adjacents = ((-1, 0), (0, 1), (1, 0), (0, -1))
 
-    def found_food(self, ant_loc, new_loc, ants):
-        # check if it found the food
-        # new_loc is destination of the
+        for vector in adjacents:
+            drow, dcol = vector
+            row, col = loc
 
-        # create a list of visible foods
-        visible_foods = []
-        for food in ants.food():
-            if self.visible_to_ant(food, ant_loc, ants):
-                visible_foods.append(food)
+            yield row + drow, col + dcol
 
-        # check if the ants steps on foods
-        food_area = []
-        adjacent = ((-1, 0),
-                    (0, 1),
-                    (1, 0),
-                    (0, -1))
-        for f_r, f_c in visible_foods:
-            for a_r, a_c in adjacent:
-                if ants.passable((f_r + a_r, f_c + a_c)):
-                    food_area.append((f_r + a_r, f_c + a_c))
+    def adjacent_food(self, new_loc, ants):
+        # check if there is food around
+        # new_loc is destination of the ant
+        food = 0
+        for r, c in self.iter_adjacent(new_loc):
+            if ants.map[r % ants.rows][c % ants.cols] == FOOD:
+                food += 1
 
-        if new_loc in food_area:
-            return True
-        else:
-            return False
+        return food
+
+    # TODO: add killed function
     '''
     def killed(self, label):
 
