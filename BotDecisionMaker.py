@@ -63,7 +63,6 @@ class DecisionMaker:
         if random.random() <= self.epsilon:
             a_index = random.randrange(num_acts)
         else:
-            # TODO: Is this right?
             # scale down epsilon
             if self.epsilon > fin_epsilon:
                 self.epsilon -= (init_epsilon - fin_epsilon) / explore
