@@ -37,14 +37,11 @@ class MyBot:
 
         return decision
 
-    def reward(self, is_killed, food_found):
+    def reward(self, adjacent_food):
         # if both food_found and killed is True then reward = -100
-        if is_killed:
-            reward = -100
-        elif food_found:
-            reward = 1
-        else:
-            reward = 0
+        #if is_killed:
+        #    reward = -100
+        reward = adjacent_food * 100
 
         return reward
 
@@ -81,21 +78,21 @@ class MyBot:
             log((self.turn, 'Moving ant ', ant_loc, ' to ', new_loc))
 
             if direction != 'r':
-                food_found = self.tracking.move_ant(ant_loc, direction, ants)
+                adjacent_food = self.tracking.move_ant(ant_loc, direction, ants)
             else:
-                food_found = False
+                adjacent_food = self.tracking.adjacent_food(ant_loc, ants)
 
             if ants.time_remaining() < 10:
                 break
 
         # we need to know the outcome before we calculate the reward
         # thats why only previous turn is stored
-        offset = 1
+        offset = 0
         if len(self.history) > offset:
             for prev_state, prev_action, prev_label in self.history[self.turn - offset]:
                 self.storage.remember(
                     prev_state, prev_action,
-                    self.reward(is_killed, food_found), prev_label,
+                    self.reward(adjacent_food), prev_label,
                     self.turn - offset
                 )
 
