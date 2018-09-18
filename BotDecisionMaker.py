@@ -21,7 +21,7 @@ num_chan = 6
 num_acts = 5
 
 # Reinforcement learning parameters
-init_epsilon = 0.3
+init_epsilon = 0.5
 fin_epsilon = 0.05
 explore = 500
 
@@ -46,6 +46,8 @@ class DecisionMaker:
 
         saver.restore(self.sess, weights_file)
 
+        # epsilon to make sure further learning
+        self.epsilon = init_epsilon
 
 
     def make_decision(self, s_in):
@@ -57,17 +59,14 @@ class DecisionMaker:
         # Reshape input
         s_in = np.reshape(s_in, (1, input_size, input_size, num_chan))
 
-        # epsilon to make sure further learning
-        epsilon = init_epsilon
-
         # decide whether to explore or stick to the best known strategy
-        if random.random() <= epsilon:
+        if random.random() <= self.epsilon:
             a_index = random.randrange(num_acts)
         else:
             # TODO: Is this right?
             # scale down epsilon
-            if epsilon > fin_epsilon:
-                epsilon -= (init_epsilon - fin_epsilon) / explore
+            if self.epsilon > fin_epsilon:
+                self.epsilon -= (init_epsilon - fin_epsilon) / explore
 
             q = self.sess.run(self.q_s, feed_dict={self.s: s_in})
             a_index = np.argmax(q)
