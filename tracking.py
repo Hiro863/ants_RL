@@ -53,6 +53,15 @@ class Tracking:
             if ant_loc not in my_ants:
                 self.killed.append(self.loc_to_ants[ant_loc])
 
+        # check for collision
+        rev_multidict = {}
+        for ant, loc in self.ants_to_loc.items():
+            rev_multidict.setdefault(loc, set()).add(ant)
+        collision_locs = [loc for loc, ants in rev_multidict.items() if len(ants) > 1]
+        for loc in collision_locs:
+            for ant in rev_multidict[loc]:
+                self.killed.append(ant)
+
         # if the ant is no longer in my ants, delete it
         self.ants_to_loc = {ant: loc for ant, loc in self.ants_to_loc.items() if loc in my_ants}
         self.loc_to_ants = {loc: ant for loc, ant in self.loc_to_ants.items() if loc in my_ants}
