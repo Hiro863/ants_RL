@@ -37,12 +37,9 @@ class MyBot:
 
         return decision
 
-    def reward(self, food):
-        # if both food_found and killed is True then reward = -100
-        #if is_killed:
-        #    reward = -100
-        reward = food * 100
-
+    def reward(self, food, is_killed):
+        # number of food x 100, if killed subtract 100000
+        reward = food * 100 - is_killed * 100000
         return reward
 
     def append_history(self, state, action, label, future_food):
@@ -95,7 +92,7 @@ class MyBot:
             for prev_state, prev_action, prev_label, food in self.history[self.turn - offset]:
                 self.storage.remember(
                     prev_state, prev_action,
-                    self.reward(food), prev_label,
+                    self.reward(food, self.tracking.is_killed(prev_label)), prev_label,
                     self.turn - offset
                 )
 

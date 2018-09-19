@@ -15,6 +15,7 @@ class Tracking:
         self.ants_to_loc = {}
         self.num_ants = 0
         self.last_turn_moves = []
+        self.killed = []
 
     def move_ant(self, loc, direc, ants):
         # store the moves that will be applied later
@@ -46,6 +47,12 @@ class Tracking:
     def update(self, ants):
         my_ants = ants.my_ants()
         self.apply_last_moves()
+
+        # check if killed
+        for ant_loc in self.loc_to_ants:
+            if ant_loc not in my_ants:
+                self.killed.append(self.loc_to_ants[ant_loc])
+
         # if the ant is no longer in my ants, delete it
         self.ants_to_loc = {ant: loc for ant, loc in self.ants_to_loc.items() if loc in my_ants}
         self.loc_to_ants = {loc: ant for loc, ant in self.loc_to_ants.items() if loc in my_ants}
@@ -76,13 +83,11 @@ class Tracking:
 
         return food
 
-    # TODO: add killed function
-    '''
-    def killed(self, label):
-
-        return is_killed
-
-    '''
+    def is_killed(self, label):
+        if label in self.killed:
+            return 1
+        else:
+            return 0
 
     def visible_to_ant(self, loc, ant_loc, ants):
         # determine which squares are visible to the ant
