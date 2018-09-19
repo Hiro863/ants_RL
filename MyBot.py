@@ -20,7 +20,7 @@ class MyBot:
             4: 'r'
         }
         self.history = {}
-        self.history_length = 3
+        self.history_length = 2
         self.turn = 0
         self.tracking = None
 
@@ -37,19 +37,19 @@ class MyBot:
 
         return decision
 
-    def reward(self, adjacent_food):
+    def reward(self, food):
         # if both food_found and killed is True then reward = -100
         #if is_killed:
         #    reward = -100
-        reward = adjacent_food * 100
+        reward = food * 100
 
         return reward
 
-    def append_history(self, state, action, label):
+    def append_history(self, state, action, label, future_food):
         if self.turn in self.history:
-            self.history[self.turn].append((state, action, label))
+            self.history[self.turn].append((state, action, label, future_food))
         else:
-            self.history[self.turn] = [(state, action, label)]
+            self.history[self.turn] = [(state, action, label, future_food)]
 
         expired = (key for key in self.history.keys() if key <= (self.turn - self.history_length))
         for turn in list(expired):
@@ -67,9 +67,6 @@ class MyBot:
             direction_onehot = self.think(state)
             direction = self.directions[np.where(direction_onehot == 1)[0][0]]
 
-            # remember what have we done this turn
-            label = self.tracking.loc_to_ants[ant_loc]
-            self.append_history(state, direction_onehot, label)
 
             if direction != 'r':
                 new_loc = ants.destination(ant_loc, direction)
@@ -77,22 +74,28 @@ class MyBot:
                 new_loc = ant_loc
             log((self.turn, 'Moving ant ', ant_loc, ' to ', new_loc))
 
-            if direction != 'r':
-                adjacent_food = self.tracking.move_ant(ant_loc, direction, ants)
-            else:
-                adjacent_food = self.tracking.adjacent_food(ant_loc, ants)
+            # remember what have we done this turn
+            label = self.tracking.loc_to_ants[ant_loc]
+            future_food = self.tracking.adjacent_food(new_loc, ants)
+            self.append_history(state, direction_onehot, label, future_food)
 
+            if direction != 'r':
+                self.tracking.move_ant(ant_loc, direction, ants)
+
+            # TODO: how often are we running out of time?
             if ants.time_remaining() < 10:
+                log(('timeout'))
                 break
+
 
         # we need to know the outcome before we calculate the reward
         # thats why only previous turn is stored
-        offset = 0
+        offset = 1
         if len(self.history) > offset:
-            for prev_state, prev_action, prev_label in self.history[self.turn - offset]:
+            for prev_state, prev_action, prev_label, food in self.history[self.turn - offset]:
                 self.storage.remember(
                     prev_state, prev_action,
-                    self.reward(adjacent_food), prev_label,
+                    self.reward(food), prev_label,
                     self.turn - offset
                 )
 
