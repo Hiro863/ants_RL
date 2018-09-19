@@ -99,7 +99,8 @@ def get_data():
     trainingstorage = TrainingStorage()
     if os.path.exists(pickle_file):
         all_data = list(trainingstorage.items())
-    #all_data = pickle.load(open(pickle_debug, "rb"))
+    else:
+        all_data = pickle.load(open(pickle_debug, "rb"))
 
     # Sort data according to label of ants
     sorted_data = []
