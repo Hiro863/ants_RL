@@ -26,7 +26,7 @@ num_acts = 5
 # Reinforcement learning parameters
 init_epsilon = 1.0
 fin_epsilon = 0.05
-explore = 500
+explore = 10000000
 
 
 class DecisionMaker:
@@ -75,14 +75,15 @@ class DecisionMaker:
         if random.random() <= self.epsilon:
             a_index = random.randrange(num_acts)
         else:
-            # scale down epsilon
-            if self.epsilon > fin_epsilon:
-                self.epsilon -= (init_epsilon - fin_epsilon) / explore
-
             q = self.sess.run(self.q_s, feed_dict={self.s: s_in})
             a_index = np.argmax(q)
 
         a[a_index] = 1
+
+        # scale down epsilon
+        if self.epsilon > fin_epsilon:
+            self.epsilon -= (init_epsilon - fin_epsilon) / explore
+            self.save_epsilon()
 
         return a
 
