@@ -106,7 +106,7 @@ if __name__ == '__main__':
             os.remove(DEBUG_LOG)
         except OSError:
             pass
-        storage = TrainingStorage(remove=False)
+        storage = TrainingStorage(remove=True)
         Ants.run(MyBot(storage))
 
     try:

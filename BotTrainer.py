@@ -111,6 +111,7 @@ def get_data(session_mode):
         else:
             return
 
+    # TODO: this is not compatible with session_mode == 'observing', label refers to different ants
     # Sort data according to label of ants
     sorted_data = []
     labels = []
