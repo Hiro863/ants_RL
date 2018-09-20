@@ -24,13 +24,13 @@ import tensorflow as tf
 import numpy as np
 import random
 import os
-import pickle
+from pickle import Unpickler
 from storage import TrainingStorage
 
 # File names
 pickle_file = 'training.p'
 pickle_file_observe = 'observing.p'
-pickle_debug = 'dummy_data_big.p'
+pickle_debug = 'debug_data.p'
 weights_file = 'model.ckpt'
 weights_dir = 'tools/weights'
 
@@ -98,13 +98,25 @@ def get_data(session_mode):
 
     # TODO: need to handle exception
     if session_mode == 'observing':
+        print('loading observe data...')
         trainingstorage = TrainingStorage(file=pickle_file_observe)
         if os.path.exists(pickle_file_observe):
             all_data = list(trainingstorage.items())
             print('observing')
         else:
             return
+    elif session_mode == 'debug':
+        print('loading debug data')
+        with open(pickle_debug, 'rb') as f:
+            unpickler = Unpickler(f)
+            try:
+                while True:
+                    all_data = unpickler.load()
+            except EOFError:
+                pass
+        # TODO write special code for debug data
     else:
+        print('loading train data')
         trainingstorage = TrainingStorage()
         if os.path.exists(pickle_file):
             all_data = list(trainingstorage.items())

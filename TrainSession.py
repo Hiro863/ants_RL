@@ -53,8 +53,14 @@ def train_session(session_mode):
 
 def main():
     # print command line arguments
-    session_mode = sys.argv[1]
+    if len(sys.argv) > 1:
+        session_mode = sys.argv[1]
+    else:
+        session_mode = 'training'
+
     if session_mode == 'observing':
+        print('Session mode: ' + session_mode)
+    elif session_mode == 'debug':
         print('Session mode: ' + session_mode)
     else:
         print('Session mode: training')
