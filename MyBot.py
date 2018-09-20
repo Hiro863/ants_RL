@@ -39,7 +39,7 @@ class MyBot:
 
     def reward(self, food, is_killed):
         # number of food x 100, if killed subtract 100000
-        reward = food * 100 - is_killed * 100000
+        reward = food * 100 - is_killed * 200
         return reward
 
     def append_history(self, state, action, label, future_food):
@@ -106,7 +106,7 @@ if __name__ == '__main__':
             os.remove(DEBUG_LOG)
         except OSError:
             pass
-        storage = TrainingStorage(remove=True)
+        storage = TrainingStorage(remove=False)
         Ants.run(MyBot(storage))
 
     try:

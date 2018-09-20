@@ -26,7 +26,7 @@ num_acts = 5
 # Reinforcement learning parameters
 init_epsilon = 1.0
 fin_epsilon = 0.05
-explore = 1000000000
+explore = 100000
 
 
 class DecisionMaker:

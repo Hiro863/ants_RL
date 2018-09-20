@@ -29,6 +29,7 @@ from storage import TrainingStorage
 
 # File names
 pickle_file = 'training.p'
+pickle_file_observe = 'observing.p'
 pickle_debug = 'dummy_data_big.p'
 weights_file = 'model.ckpt'
 weights_dir = 'tools/weights'
@@ -93,14 +94,22 @@ def process_data(data):
     return batches
 
 
-def get_data():
+def get_data(session_mode):
 
     # TODO: need to handle exception
-    trainingstorage = TrainingStorage()
-    if os.path.exists(pickle_file):
-        all_data = list(trainingstorage.items())
+    if session_mode == 'observing':
+        trainingstorage = TrainingStorage(file=pickle_file_observe)
+        if os.path.exists(pickle_file_observe):
+            all_data = list(trainingstorage.items())
+            print('observing')
+        else:
+            return
     else:
-        all_data = pickle.load(open(pickle_debug, "rb"))
+        trainingstorage = TrainingStorage()
+        if os.path.exists(pickle_file):
+            all_data = list(trainingstorage.items())
+        else:
+            return
 
     # Sort data according to label of ants
     sorted_data = []

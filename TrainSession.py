@@ -1,16 +1,17 @@
 import tensorflow as tf
 from BotTrainer import get_data, create_network, train_network
 import os
+import sys
 
 weights_file = 'model.ckpt'
 weights_dir = 'tools/weights'
 
 
-def train_session():
+def train_session(session_mode):
     print(__file__)
     # Fetch data
     print('Fetching data...')
-    batches = get_data()
+    batches = get_data(session_mode)
 
     # Define Session
     sess = tf.InteractiveSession()
@@ -50,4 +51,17 @@ def train_session():
             print('Weights saved')
 
 
-train_session()
+def main():
+    # print command line arguments
+    session_mode = sys.argv[1]
+    if session_mode == 'observing':
+        print('Session mode: ' + session_mode)
+    else:
+        print('Session mode: training')
+
+    # start training
+    train_session(session_mode)
+
+
+if __name__ == '__main__':
+    main()
