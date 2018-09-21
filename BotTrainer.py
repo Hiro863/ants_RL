@@ -31,6 +31,7 @@ from storage import TrainingStorage
 pickle_file = 'training.p'
 pickle_file_observe = 'observing.p'
 pickle_debug = 'debug_data.p'
+pickle_test = 'debug_test.p'
 weights_file = 'model.ckpt'
 weights_dir = 'tools/weights'
 
@@ -58,7 +59,7 @@ num_acts = 5
 # Reinforcement learning parameters
 gamma = 0.9
 batch_size = 5
-l_rate = 0.001
+l_rate = 0.1
 epoch = 10
 
 
@@ -67,7 +68,7 @@ def process_data(data):
 
     for i, (s, a, r) in enumerate(data):
         if i + 1 < len(data):
-            data_s.append((s, a, r, data[i + 1][0]))  # data[i+1][0] is s_
+            data_s.append((s, a, r, data[i + 1][0]))
 
     # Create minibatches
     minibatches = []
@@ -78,17 +79,41 @@ def process_data(data):
     for i in range(0, len(data) - batch_size, batch_size):
         minibatches.append(data_s[i:i + batch_size])
 
+    s_batch = np.empty((0, 16, 16, 6))
+    a_batch = np.empty((0, 5))
+    r_batch = np.empty((0, 1))
+    s_batch_ = np.empty((0, 16, 16, 6))
+
     for minibatch in minibatches:
         # Separately store minibatches
-        s_batch = np.array([single_data[0] for single_data in minibatch])
-        a_batch = np.array([single_data[1] for single_data in minibatch])
-        r_batch = np.array([single_data[2] for single_data in minibatch])
-        s_batch_ = np.array([single_data[3] for single_data in minibatch])
 
-        s_batch = np.reshape(s_batch, (batch_size, input_size, input_size, num_chan))
-        a_batch = np.reshape(a_batch, (batch_size, num_acts))
-        r_batch = np.reshape(r_batch, (batch_size, 1))
-        s_batch_ = np.reshape(s_batch_, (batch_size, input_size, input_size, num_chan))
+
+        for single_data in minibatch:
+            s, a, r, s_ = single_data
+
+            new_s = np.empty((16, 16, 0))
+            for channel in s:
+                channel = np.reshape(channel, (16, 16, 1))
+                new_s = np.append(new_s, channel, axis=2)
+
+            new_a = np.array(a)
+            new_r = np.array(r)
+
+            new_s_ = np.empty((16, 16, 0))
+            for channel in s_:
+                channel = np.reshape(channel, (16, 16, 1))
+                new_s_ = np.append(new_s_, channel, axis=2)
+
+
+            new_s = np.reshape(new_s, (1, 16, 16, 6))
+            new_a = np.reshape(new_a, (1, 5))
+            new_r = np.reshape(new_r, (1, 1))
+            new_s_ = np.reshape(new_s_, (1, 16, 16, 6))
+
+            s_batch = np.append(s_batch, new_s, axis=0)
+            a_batch = np.append(a_batch, new_a, axis=0)
+            r_batch = np.append(r_batch, new_r, axis=0)
+            s_batch_ = np.append(s_batch_, new_s_, axis=0)
 
         batches.append((s_batch, a_batch, r_batch, s_batch_))
     return batches
@@ -96,7 +121,7 @@ def process_data(data):
 
 def get_data(session_mode):
 
-    # TODO: need to handle exception
+    # TODO: clean this bit up
     if session_mode == 'observing':
         print('loading observe data...')
         trainingstorage = TrainingStorage(file=pickle_file_observe)
@@ -110,11 +135,19 @@ def get_data(session_mode):
         with open(pickle_debug, 'rb') as f:
             unpickler = Unpickler(f)
             try:
-                while True:
-                    all_data = unpickler.load()
+                batches = unpickler.load()
+                return batches
             except EOFError:
                 pass
-        # TODO write special code for debug data
+    elif session_mode == 'test':
+        print('loading test data')
+        with open(pickle_test, 'rb') as f:
+            unpickler = Unpickler(f)
+            try:
+                batches = unpickler.load()
+                return batches
+            except EOFError:
+                pass
     else:
         print('loading train data')
         trainingstorage = TrainingStorage()
@@ -194,10 +227,10 @@ def create_network():
     return q_s, s, variables
 
 
-def train_network(q_s, s, sess, batches, variables):
+def train_network(q_s, s, sess, batches, variables, session_mode):
     # Placeholders
     a = tf.placeholder(tf.float32, shape=[None, num_acts])
-    y = tf.placeholder(tf.float32, shape=[None])
+    y = tf.placeholder(tf.float32, shape=[None, 1])
 
     # Loss function
     q_s_a = tf.reduce_sum(tf.multiply(q_s, a))
@@ -210,7 +243,7 @@ def train_network(q_s, s, sess, batches, variables):
     # initialize
     sess.run(tf.global_variables_initializer())
     print('initialized')
-
+    '''
     if os.path.exists(weights_dir):
         # Load weight
         saver = tf.train.Saver({'w_conv1': w_conv1,
@@ -224,19 +257,43 @@ def train_network(q_s, s, sess, batches, variables):
         path = os.path.join(weights_dir, weights_file)
         saver.restore(sess, path)
         print('Weights loaded')
-
+    '''
     # Training
     for i in range(epoch):
-        for batch in batches:
+        for count, batch in enumerate(batches):
             (s_batch, a_batch, r_batch, s_batch_) = batch
             y_batch = []
 
             q_s_a_t = q_s.eval(feed_dict={s: s_batch_})
 
             for j in range(batch_size):
-                y_batch.append(r_batch[j][0] + gamma * np.max(q_s_a_t))
+                y_batch.append(r_batch[j] + gamma * np.max(q_s_a_t[j]))
 
             train_step.run(feed_dict={y: y_batch, a: a_batch, s: s_batch_})
 
+            if count % 100 == 0:
+                loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
+                print(loss_val)
+
         loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
-        print('Epoch: %d, Loss: %f' % (i, loss_val))
+        if session_mode == 'debug':
+            test_batches = get_data('test')
+            correct = 0
+            total = 0
+            for test_batch in test_batches[0]:
+                (test_s_batch, test_a_batch, test_r_batch, test_s_batch_) = test_batch
+                for test_s, test_a in zip(test_s_batch, test_a_batch):
+                    test_s = np.reshape(test_s, (1, input_size, input_size, num_chan))
+                    pred_q = sess.run(q_s, feed_dict={s: test_s})
+                    pred_a = np.zeros(num_acts)
+                    a_index = np.argmax(pred_q)
+                    pred_a[a_index] = 1
+                    if np.argmax(pred_a) == np.argmax(test_a):
+                        correct += 1
+                    total += 1
+
+            accuracy = float(correct / total)
+            print('Epoch: %d, Loss: %f, Accuracy %f' % (i, loss_val, accuracy))
+        else:
+            print('Epoch: %d, Loss: %f' % (i, loss_val))
+
