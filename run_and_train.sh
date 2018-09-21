@@ -1,6 +1,4 @@
-#!/usr/bin/env bash#!/usr/bin/env sh
-#echo Observing...
-#python3 TrainSession.py observing
+#!/usr/bin/env bash
 
 END=1000
 for i in $(seq 1 $END); do

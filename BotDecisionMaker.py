@@ -12,7 +12,7 @@ from pickle import Pickler, Unpickler
 
 # File names
 # TODO: get paths sorted
-weights_file = '/Users/hiro/Documents/IT_and_Cognition/Scientific_Programming/aichallenge-epsilon/ants/ants_RL/tools/weights/model.ckpt'
+weights_file = os.path.join(os.path.dirname(__file__), 'tools/weights/model.ckpt')
 pickle_file = 'epsilon.p'
 
 
