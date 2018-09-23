@@ -110,28 +110,31 @@ class Ants():
             if len(line) > 0:
                 tokens = line.split()
                 if len(tokens) >= 3:
-                    row = int(tokens[1])
-                    col = int(tokens[2])
-                    if tokens[0] == 'w':
-                        self.map[row][col] = WATER
-                    elif tokens[0] == 'f':
-                        self.map[row][col] = FOOD
-                        self.food_list.append((row, col))
-                    else:
-                        owner = int(tokens[3])
-                        if tokens[0] == 'a':
-                            self.map[row][col] = owner
-                            self.ant_list[(row, col)] = owner
-                        elif tokens[0] == 'd':
-                            # food could spawn on a spot where an ant just died
-                            # don't overwrite the space unless it is land
-                            if self.map[row][col] == LAND:
-                                self.map[row][col] = DEAD
-                            # but always add to the dead list
-                            self.dead_list[(row, col)].append(owner)
-                        elif tokens[0] == 'h':
+                    try:
+                        row = int(tokens[1])
+                        col = int(tokens[2])
+                        if tokens[0] == 'w':
+                            self.map[row][col] = WATER
+                        elif tokens[0] == 'f':
+                            self.map[row][col] = FOOD
+                            self.food_list.append((row, col))
+                        else:
                             owner = int(tokens[3])
-                            self.hill_list[(row, col)] = owner
+                            if tokens[0] == 'a':
+                                self.map[row][col] = owner
+                                self.ant_list[(row, col)] = owner
+                            elif tokens[0] == 'd':
+                                # food could spawn on a spot where an ant just died
+                                # don't overwrite the space unless it is land
+                                if self.map[row][col] == LAND:
+                                    self.map[row][col] = DEAD
+                                # but always add to the dead list
+                                self.dead_list[(row, col)].append(owner)
+                            elif tokens[0] == 'h':
+                                owner = int(tokens[3])
+                                self.hill_list[(row, col)] = owner
+                    except (IndexError, ValueError):
+                        print("Couldn't parse response '{}'. Skipping.".format(line))
 
     def time_remaining(self):
         return self.turntime - int(1000 * (time.clock() - self.turn_start_time))

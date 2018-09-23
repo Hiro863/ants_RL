@@ -7,7 +7,7 @@ try:
     from sys import maxint
 except ImportError:
     from sys import maxsize as maxint
-        
+
 MY_ANT = 0
 ANTS = 0
 DEAD = -1
@@ -98,32 +98,35 @@ class Ants():
             if len(line) > 0:
                 tokens = line.split()
                 if len(tokens) >= 3:
-                    row = int(tokens[1])
-                    col = int(tokens[2])
-                    if tokens[0] == 'a':
-                        owner = int(tokens[3])
-                        self.map[row][col] = owner
-                        self.ant_list[(row, col)] = owner
-                    elif tokens[0] == 'f':
-                        self.map[row][col] = FOOD
-                        self.food_list.append((row, col))
-                    elif tokens[0] == 'w':
-                        self.map[row][col] = WATER
-                    elif tokens[0] == 'd':
-                        # food could spawn on a spot where an ant just died
-                        # don't overwrite the space unless it is land
-                        if self.map[row][col] == LAND:
-                            self.map[row][col] = DEAD
-                        # but always add to the dead list
-                        self.dead_list.append((row, col))
-                    elif tokens[0] == 'h':
-                        owner = int(tokens[3])
-                        self.hill_list[(row, col)] = owner
+                    try:
+                        row = int(tokens[1])
+                        col = int(tokens[2])
+                        if tokens[0] == 'a':
+                            owner = int(tokens[3])
+                            self.map[row][col] = owner
+                            self.ant_list[(row, col)] = owner
+                        elif tokens[0] == 'f':
+                            self.map[row][col] = FOOD
+                            self.food_list.append((row, col))
+                        elif tokens[0] == 'w':
+                            self.map[row][col] = WATER
+                        elif tokens[0] == 'd':
+                            # food could spawn on a spot where an ant just died
+                            # don't overwrite the space unless it is land
+                            if self.map[row][col] == LAND:
+                                self.map[row][col] = DEAD
+                            # but always add to the dead list
+                            self.dead_list.append((row, col))
+                        elif tokens[0] == 'h':
+                            owner = int(tokens[3])
+                            self.hill_list[(row, col)] = owner
+                    except (IndexError, ValueError):
+                        print("Couldn't parse response '{}'. Skipping.".format(line))
 
     def issue_order(self, order):
         sys.stdout.write('o %s %s %s\n' % (order[0], order[1], order[2]))
         sys.stdout.flush()
-        
+
     def finish_turn(self):
         sys.stdout.write('go\n')
         sys.stdout.flush()
@@ -135,7 +138,7 @@ class Ants():
     def enemy_ants(self):
         return [(loc, owner) for loc, owner in self.ant_list.items()
                     if owner != MY_ANT]
-    
+
     def my_hills(self):
         return [loc for loc, owner in self.hill_list.items()
                     if owner == MY_ANT]
@@ -143,19 +146,19 @@ class Ants():
     def enemy_hills(self):
         return [(loc, owner) for loc, owner in self.hill_list.items()
                     if owner != MY_ANT]
-        
+
     def food(self):
         return self.food_list[:]
 
     def passable(self, row, col):
         return self.map[row][col] != WATER
-    
+
     def unoccupied(self, row, col):
         return self.map[row][col] in (LAND, DEAD, UNSEEN)
 
     def destination(self, row, col, direction):
         d_row, d_col = AIM[direction]
-        return ((row + d_row) % self.height, (col + d_col) % self.width)        
+        return ((row + d_row) % self.height, (col + d_col) % self.width)
 
     def distance(self, row1, col1, row2, col2):
         row1 = row1 % self.height
@@ -204,7 +207,7 @@ class Ants():
                 if dist<min_dist:
                     min_dist = dist
                     closest_food = food
-        return closest_food    
+        return closest_food
 
     def closest_enemy_ant(self,row1,col1,filter=None):
         #find the closest enemy ant from this row/col
@@ -216,7 +219,7 @@ class Ants():
                 if dist<min_dist:
                     min_dist = dist
                     closest_ant = ant[0]
-        return closest_ant    
+        return closest_ant
 
     def closest_enemy_hill(self,row1,col1,filter=None):
         #find the closest enemy hill from this row/col
@@ -228,7 +231,7 @@ class Ants():
                 if dist<min_dist:
                     min_dist = dist
                     closest_hill = hill[0]
-        return closest_hill   
+        return closest_hill
 
     def closest_unseen(self,row1,col1,filter=None):
         #find the closest unseen from this row/col
