@@ -69,46 +69,53 @@ def process_data(data):
     for i, (s, a, r) in enumerate(data):
         if i + 1 < len(data):
             data_s.append((s, a, r, data[i + 1][0]))
+        else: # TODO suboptimal solution
+            data_s.append((s, a, r, s))
 
     # Create minibatches
     minibatches = []
     batches = []
 
+    # shaffling before creating batches
     random.shuffle(data_s)
 
+    # dividing data into minibatches
     for i in range(0, len(data) - batch_size, batch_size):
         minibatches.append(data_s[i:i + batch_size])
 
-    s_batch = np.empty((0, 16, 16, 6))
-    a_batch = np.empty((0, 5))
-    r_batch = np.empty((0, 1))
-    s_batch_ = np.empty((0, 16, 16, 6))
+
 
     for minibatch in minibatches:
-        # Separately store minibatches
+        # turning lists into numpy arrays
+        s_batch = np.empty((0, input_size, input_size, num_chan))
+        a_batch = np.empty((0, num_acts))
+        r_batch = np.empty((0, 1))
+        s_batch_ = np.empty((0, input_size, input_size, num_chan))
 
 
         for single_data in minibatch:
             s, a, r, s_ = single_data
 
-            new_s = np.empty((16, 16, 0))
+            # stack channel by channel
+            new_s = np.empty((input_size, input_size, 0))
             for channel in s:
-                channel = np.reshape(channel, (16, 16, 1))
+                channel = np.reshape(channel, (input_size, input_size, 1))
                 new_s = np.append(new_s, channel, axis=2)
 
             new_a = np.array(a)
             new_r = np.array(r)
 
-            new_s_ = np.empty((16, 16, 0))
+            new_s_ = np.empty((input_size, input_size, 0))
             for channel in s_:
-                channel = np.reshape(channel, (16, 16, 1))
+                channel = np.reshape(channel, (input_size, input_size, 1))
                 new_s_ = np.append(new_s_, channel, axis=2)
 
 
-            new_s = np.reshape(new_s, (1, 16, 16, 6))
-            new_a = np.reshape(new_a, (1, 5))
+            new_s = np.reshape(new_s, (1, input_size, input_size, num_chan))
+            new_a = np.reshape(new_a, (1, num_acts))
             new_r = np.reshape(new_r, (1, 1))
-            new_s_ = np.reshape(new_s_, (1, 16, 16, 6))
+            new_s_ = np.reshape(new_s_, (1, input_size, input_size, num_chan))
+
 
             s_batch = np.append(s_batch, new_s, axis=0)
             a_batch = np.append(a_batch, new_a, axis=0)
@@ -156,7 +163,6 @@ def get_data(session_mode):
         else:
             return
 
-    # TODO: this is not compatible with session_mode == 'observing', label refers to different ants
     # Sort data according to label of ants
     sorted_data = []
     labels = []
@@ -177,7 +183,6 @@ def get_data(session_mode):
     for ant_data in sorted_data:
         ant_batches = process_data(ant_data)
         batches.append(ant_batches)
-
     return batches
 
 
@@ -237,19 +242,18 @@ def train_network(q_s, s, sess, batches, variables, session_mode):
     loss = tf.reduce_mean(tf.square(y - q_s_a))
     train_step = tf.train.AdamOptimizer(l_rate).minimize(loss)
 
-
     w_conv1, w_conv2, w_conv3, b_conv1, b_conv2, b_conv3, w_full, b_full = variables
 
     # initialize
     sess.run(tf.global_variables_initializer())
     print('initialized')
-    '''
+
     if os.path.exists(weights_dir):
         # Load weight
         saver = tf.train.Saver({'w_conv1': w_conv1,
                                 'w_conv2': w_conv2,
                                 'w_conv3': w_conv3,
-                                'b-conv1': b_conv1,
+                                'b_conv1': b_conv1,
                                 'b_conv2': b_conv2,
                                 'b_conv3': b_conv3,
                                 'w_full': w_full,
@@ -257,7 +261,7 @@ def train_network(q_s, s, sess, batches, variables, session_mode):
         path = os.path.join(weights_dir, weights_file)
         saver.restore(sess, path)
         print('Weights loaded')
-    '''
+
     # Training
     for i in range(epoch):
         for count, batch in enumerate(batches):
@@ -269,13 +273,13 @@ def train_network(q_s, s, sess, batches, variables, session_mode):
             for j in range(batch_size):
                 y_batch.append(r_batch[j] + gamma * np.max(q_s_a_t[j]))
 
-            train_step.run(feed_dict={y: y_batch, a: a_batch, s: s_batch_})
+            train_step.run(feed_dict={y: y_batch, a: a_batch, s: s_batch})
 
             if count % 100 == 0:
                 loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
                 print(loss_val)
 
-        loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
+        loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch})
         if session_mode == 'debug':
             test_batches = get_data('test')
             correct = 0

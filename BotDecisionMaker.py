@@ -26,7 +26,7 @@ num_acts = 5
 # Reinforcement learning parameters
 init_epsilon = 1.0
 fin_epsilon = 0.05
-explore = 1000000
+explore = 10000000
 
 
 class DecisionMaker:
@@ -34,20 +34,22 @@ class DecisionMaker:
         self.q_s, self.s, variables = create_network()
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
+        self.is_weights = False
 
         # Load weight
         w_conv1, w_conv2, w_conv3, b_conv1, b_conv2, b_conv3, w_full, b_full = variables
+        if os.path.exists(weights_file):
+            saver = tf.train.Saver({'w_conv1': w_conv1,
+                                    'w_conv2': w_conv2,
+                                    'w_conv3': w_conv3,
+                                    'b_conv1': b_conv1,
+                                    'b_conv2': b_conv2,
+                                    'b_conv3': b_conv3,
+                                    'w_full': w_full,
+                                    'b_full': b_full})
 
-        saver = tf.train.Saver({'w_conv1': w_conv1,
-                                'w_conv2': w_conv2,
-                                'w_conv3': w_conv3,
-                                'b-conv1': b_conv1,
-                                'b_conv2': b_conv2,
-                                'b_conv3': b_conv3,
-                                'w_full': w_full,
-                                'b_full': b_full})
-
-        saver.restore(self.sess, weights_file)
+            saver.restore(self.sess, weights_file)
+            self.is_weights = True
 
 
         # set epsilon
@@ -66,17 +68,20 @@ class DecisionMaker:
         # action one-hot vector
         a = np.zeros(num_acts)
 
+        if self.is_weights:
 
+            # Reshape input
+            s_in = np.reshape(s_in, (1, input_size, input_size, num_chan))
 
-        # Reshape input
-        s_in = np.reshape(s_in, (1, input_size, input_size, num_chan))
+            # decide whether to explore or stick to the best known strategy
+            if random.random() <= self.epsilon:
+                a_index = random.randrange(num_acts)
+            else:
+                q = self.sess.run(self.q_s, feed_dict={self.s: s_in})
+                a_index = np.argmax(q)
 
-        # decide whether to explore or stick to the best known strategy
-        if random.random() <= self.epsilon:
-            a_index = random.randrange(num_acts)
         else:
-            q = self.sess.run(self.q_s, feed_dict={self.s: s_in})
-            a_index = np.argmax(q)
+            a_index = random.randint(0, num_acts - 1)
 
         a[a_index] = 1
 
@@ -84,6 +89,7 @@ class DecisionMaker:
         if self.epsilon > fin_epsilon:
             self.epsilon -= (init_epsilon - fin_epsilon) / explore
             self.save_epsilon()
+
 
         return a
 
