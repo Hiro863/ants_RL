@@ -54,17 +54,22 @@ class Tracking:
                 self.killed.append(self.loc_to_ants[ant_loc])
 
         # check for collision
+        # if ants collide, two labels share one location, so we need a multidict
         rev_multidict = {}
         for ant, loc in self.ants_to_loc.items():
             rev_multidict.setdefault(loc, set()).add(ant)
+
+        # check if several ants are at the same location (i.e. a collision)
         collision_locs = [loc for loc, ants in rev_multidict.items() if len(ants) > 1]
+
+        # append all collided ants to killed list
         for loc in collision_locs:
             for ant in rev_multidict[loc]:
                 self.killed.append(ant)
 
         # if the ant is no longer in my ants, delete it
-        self.ants_to_loc = {ant: loc for ant, loc in self.ants_to_loc.items() if loc in my_ants}
-        self.loc_to_ants = {loc: ant for loc, ant in self.loc_to_ants.items() if loc in my_ants}
+        self.ants_to_loc = {ant: loc for ant, loc in self.ants_to_loc.items() if loc in my_ants and ant not in self.killed}
+        self.loc_to_ants = {loc: ant for loc, ant in self.loc_to_ants.items() if loc in my_ants and ant not in self.killed}
 
         # if the ant is not yet in the dictionary, add it
         for ant_loc in my_ants:
