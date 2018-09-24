@@ -8,7 +8,7 @@ weights_dir = 'tools/weights'
 
 
 def train_session(session_mode):
-    print(__file__)
+
     # Fetch data
     print('Fetching data...')
     batches = get_data(session_mode)
@@ -18,10 +18,7 @@ def train_session(session_mode):
 
     # Create Network
     print('Creating network...')
-    q_s, s, variables = create_network()
-
-
-    w_conv1, w_conv2, w_conv3, b_conv1, b_conv2, b_conv3, w_full, b_full = variables
+    q_s, s, keep_prob = create_network()
 
     # Train Network
     print('Training...')
