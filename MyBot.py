@@ -7,7 +7,6 @@ from antutils import logexcept, DEBUG_LOG, log
 from BotDecisionMaker import DecisionMaker
 import numpy as np
 from tracking import Tracking
-from pickle import Unpickler
 
 class MyBot:
     def __init__(self, storage):
