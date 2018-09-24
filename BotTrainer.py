@@ -53,81 +53,94 @@ pool2_size = int(pool1_size / 2)
 conv3_out_num = 64
 pool3_size = int(pool2_size / 2)
 
+# Fully Connected
+fc_neuron = 256
+
 # Output
 num_acts = 5
 
 # Reinforcement learning parameters
-gamma = 0.9
-batch_size = 5
-l_rate = 0.1
-epoch = 10
+gamma = 0.99
+batch_size = 100
+l_rate = 1e-6
+epoch = 100
 
 
-def process_data(data):
+def add_next_state(data):
+    # converts (s, a, r) to (s, a, r, s')
     data_s = []
 
     for i, (s, a, r) in enumerate(data):
         if i + 1 < len(data):
             data_s.append((s, a, r, data[i + 1][0]))
-        else: # TODO suboptimal solution
+        else:  # TODO suboptimal solution
             data_s.append((s, a, r, s))
+
+    return data_s
+
+
+def create_batches(data):
 
     # Create minibatches
     minibatches = []
     batches = []
 
     # shaffling before creating batches
-    random.shuffle(data_s)
+    random.shuffle(data)
 
     # dividing data into minibatches
     for i in range(0, len(data) - batch_size, batch_size):
-        minibatches.append(data_s[i:i + batch_size])
+        minibatches.append(data[i:i + batch_size])
 
-
-
+    # reshape each elements to right shape in np.array form
     for minibatch in minibatches:
-        # turning lists into numpy arrays
+
+        # empty arrays
         s_batch = np.empty((0, input_size, input_size, num_chan))
         a_batch = np.empty((0, num_acts))
         r_batch = np.empty((0, 1))
         s_batch_ = np.empty((0, input_size, input_size, num_chan))
 
-
+        # process for each tuple
         for single_data in minibatch:
             s, a, r, s_ = single_data
 
-            # stack channel by channel
+            # stack channel by channel, s
             new_s = np.empty((input_size, input_size, 0))
             for channel in s:
                 channel = np.reshape(channel, (input_size, input_size, 1))
                 new_s = np.append(new_s, channel, axis=2)
 
+            # simply turn into arrays
             new_a = np.array(a)
             new_r = np.array(r)
 
+            # stack channel by channel, s'
             new_s_ = np.empty((input_size, input_size, 0))
             for channel in s_:
                 channel = np.reshape(channel, (input_size, input_size, 1))
                 new_s_ = np.append(new_s_, channel, axis=2)
 
-
+            # reshape, first dimension corresponds to batch size
             new_s = np.reshape(new_s, (1, input_size, input_size, num_chan))
             new_a = np.reshape(new_a, (1, num_acts))
             new_r = np.reshape(new_r, (1, 1))
             new_s_ = np.reshape(new_s_, (1, input_size, input_size, num_chan))
 
-
+            # append single data to the batch
             s_batch = np.append(s_batch, new_s, axis=0)
             a_batch = np.append(a_batch, new_a, axis=0)
             r_batch = np.append(r_batch, new_r, axis=0)
             s_batch_ = np.append(s_batch_, new_s_, axis=0)
 
+        # tuple of each batches
         batches.append((s_batch, a_batch, r_batch, s_batch_))
     return batches
 
 
 def get_data(session_mode):
 
+    # Loading data from pickle file
     # TODO: clean this bit up
     if session_mode == 'observing':
         print('loading observe data...')
@@ -174,15 +187,26 @@ def get_data(session_mode):
             ant_data = []
             sorted_data.append(ant_data)
 
+        # append ants to different sublists according to the label
         for index in range(len(labels)):
             if label == index:
                 sorted_data[label].append((s, a, r))
 
-    # Preprocess data and create batches
-    batches = []
+
+
+    # add s' to (s, a, r)
+    data_added = []
     for ant_data in sorted_data:
-        ant_batches = process_data(ant_data)
-        batches.append(ant_batches)
+        data_added.append(add_next_state(ant_data))
+
+    # concatenate all tuples
+    concatenated = []
+    for ant_data_added in data_added:
+        for single_data in ant_data_added:
+            concatenated.append(single_data)
+
+    # create minibatches
+    batches = create_batches(concatenated)
     return batches
 
 
@@ -193,7 +217,7 @@ def create_network():
     def conv_layer(in_data, in_chan, out_chan, name):
         w_conv = tf.Variable(tf.truncated_normal([3, 3, in_chan, out_chan], stddev=0.1), name='w_conv' + name)
         b_conv = tf.Variable(tf.constant(0.1, shape=[out_chan]), name='b_conv' + name)
-        return tf.nn.relu(tf.nn.conv2d(in_data, w_conv, strides=[1,1,1,1], padding='SAME') + b_conv), w_conv, b_conv
+        return tf.nn.relu(tf.nn.conv2d(in_data, w_conv, strides=[1, 1, 1, 1], padding='SAME') + b_conv), w_conv, b_conv
 
     def pooling_layer(conv):
         h_pool = tf.nn.max_pool(conv,
@@ -202,10 +226,10 @@ def create_network():
                                 padding='SAME')
         return h_pool
 
-    def full_layer(in_data, num_neuron, num_out):
-        w_full = tf.Variable(tf.truncated_normal([num_neuron, num_out]), name='w_full')
-        b_full = tf.Variable(tf.constant(0.1, shape=[num_out]), name='b_full')
-        return tf.matmul(in_data, w_full) + b_full, w_full, b_full
+    def full_layer(in_data, num_neuron, num_out, name):
+        w_full = tf.Variable(tf.truncated_normal([num_neuron, num_out]), name='w_full' + name)
+        b_full = tf.Variable(tf.constant(0.1, shape=[num_out]), name='b_full' + name)
+        return tf.matmul(in_data, w_full) + b_full
 
     # Convolutional layer 1, out:map_width x map_height x conv1_num_chan
     conv1, w_conv1, b_conv1 = conv_layer(s, num_chan, conv1_out_num, '1')
@@ -226,13 +250,19 @@ def create_network():
     pool3 = pooling_layer(conv3)
 
     # Fully connected layer
-    q_s, w_full, b_full = full_layer(tf.layers.flatten(pool3), pool3_size * pool3_size * conv3_out_num, num_acts)
+    fc = tf.nn.relu(full_layer(tf.layers.flatten(pool3), pool3_size * pool3_size * conv3_out_num, fc_neuron, '1'))
 
-    variables = (w_conv1, w_conv2, w_conv3, b_conv1, b_conv2, b_conv3, w_full, b_full)
-    return q_s, s, variables
+    # Dropout layer
+    keep_prob = tf.placeholder(tf.float32)
+    fc_drop = tf.nn.dropout(fc, keep_prob)
+
+    # Output layer
+    q_s = full_layer(fc_drop, fc_neuron, num_acts, '2')
+
+    return q_s, s, keep_prob
 
 
-def train_network(q_s, s, sess, batches, variables, session_mode):
+def train_network(q_s, s, sess, batches, keep_prob, session_mode):
     # Placeholders
     a = tf.placeholder(tf.float32, shape=[None, num_acts])
     y = tf.placeholder(tf.float32, shape=[None, 1])
@@ -242,44 +272,36 @@ def train_network(q_s, s, sess, batches, variables, session_mode):
     loss = tf.reduce_mean(tf.square(y - q_s_a))
     train_step = tf.train.AdamOptimizer(l_rate).minimize(loss)
 
-    w_conv1, w_conv2, w_conv3, b_conv1, b_conv2, b_conv3, w_full, b_full = variables
-
     # initialize
-    sess.run(tf.global_variables_initializer())
-    print('initialized')
-
-    if os.path.exists(weights_dir):
-        # Load weight
-        saver = tf.train.Saver({'w_conv1': w_conv1,
-                                'w_conv2': w_conv2,
-                                'w_conv3': w_conv3,
-                                'b_conv1': b_conv1,
-                                'b_conv2': b_conv2,
-                                'b_conv3': b_conv3,
-                                'w_full': w_full,
-                                'b_full': b_full})
-        path = os.path.join(weights_dir, weights_file)
-        saver.restore(sess, path)
-        print('Weights loaded')
+    #sess.run(tf.global_variables_initializer())
+    #print('initialized')
+    if os.path.exists('tools/weights/'):
+        saver = tf.train.Saver()
+        saver.restore(sess, "tools/weights/model.ckpt")
+        print('weights loaded')
+    else:
+        sess.run(tf.global_variables_initializer())
+        print('initialized')
 
     # Training
+    last_loss = 0
     for i in range(epoch):
         for count, batch in enumerate(batches):
             (s_batch, a_batch, r_batch, s_batch_) = batch
             y_batch = []
 
-            q_s_a_t = q_s.eval(feed_dict={s: s_batch_})
+            # get Q value for the next state
+            q_s_a_t = q_s.eval(feed_dict={s: s_batch_, keep_prob: 0.5})
 
+            # calculate target value using Bellman equation
             for j in range(batch_size):
                 y_batch.append(r_batch[j] + gamma * np.max(q_s_a_t[j]))
 
-            train_step.run(feed_dict={y: y_batch, a: a_batch, s: s_batch})
+            # train the neural network
+            train_step.run(feed_dict={y: y_batch, a: a_batch, s: s_batch, keep_prob: 0.5})
 
-            if count % 100 == 0:
-                loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch_})
-                print(loss_val)
-
-        loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch})
+        # print the loss value
+        loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch, keep_prob: 1.0})
         if session_mode == 'debug':
             test_batches = get_data('test')
             correct = 0
@@ -301,3 +323,5 @@ def train_network(q_s, s, sess, batches, variables, session_mode):
         else:
             print('Epoch: %d, Loss: %f' % (i, loss_val))
 
+            last_loss = loss_val
+    return last_loss

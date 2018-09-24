@@ -13,7 +13,8 @@ from pickle import Pickler, Unpickler
 # File names
 # TODO: get paths sorted
 weights_file = os.path.join(os.path.dirname(__file__), 'tools/weights/model.ckpt')
-pickle_file = 'epsilon.p'
+pickle_dir = 'pickle_files'
+pickle_file_epsilon = 'epsilon.p'
 
 
 # Input
@@ -38,22 +39,14 @@ class DecisionMaker:
 
         # Load weight
         if os.path.exists(weights_file):
-            saver = tf.train.Saver({'w_conv1': w_conv1,
-                                    'w_conv2': w_conv2,
-                                    'w_conv3': w_conv3,
-                                    'b_conv1': b_conv1,
-                                    'b_conv2': b_conv2,
-                                    'b_conv3': b_conv3,
-                                    'w_full': w_full,
-                                    'b_full': b_full})
-
+            saver = tf.train.Saver()
             saver.restore(self.sess, weights_file)
             self.is_weights = True
 
         # set epsilon
-        self.epsilon = init_epsilon
-        if os.path.exists(pickle_file):
-            with open(pickle_file, 'rb') as f:
+        pickle_path = os.path.join(pickle_dir, pickle_file_epsilon)
+        if os.path.exists(pickle_path):
+            with open(pickle_path, 'rb') as f:
                 unpickler = Unpickler(f)
                 try:
                     self.epsilon = unpickler.load()
@@ -89,5 +82,6 @@ class DecisionMaker:
         return a
 
     def save_epsilon(self):
-        with open(pickle_file, 'wb') as f:
+        pickle_path = os.path.join(pickle_dir, pickle_file_epsilon)
+        with open(pickle_path, 'wb') as f:
             Pickler(f).dump(self.epsilon)

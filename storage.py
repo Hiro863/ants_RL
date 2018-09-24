@@ -137,27 +137,3 @@ class TrainingStorage:
         else:
             return True, row, col
 
-
-'''
-# debug
-
-map = np.zeros(shape=(43, 39), dtype=np.dtype('b'))
-i = 0
-for row in range(43):
-    for col in range(39):
-        map[row, col] = i
-        i += 1
-
-print(map)
-class Ants:
-    def __init__(self):
-        self.rows = 43
-        self.cols = 39
-
-ants = Ants()
-
-storage = TrainingStorage()
-
-new_map = storage.map_convert((0,0), ants, map)
-
-print(new_map)'''

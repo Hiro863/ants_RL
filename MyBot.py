@@ -7,6 +7,7 @@ from antutils import logexcept, DEBUG_LOG, log
 from BotDecisionMaker import DecisionMaker
 import numpy as np
 from tracking import Tracking
+from pickle import Unpickler
 
 class MyBot:
     def __init__(self, storage):
@@ -106,7 +107,7 @@ if __name__ == '__main__':
             os.remove(DEBUG_LOG)
         except OSError:
             pass
-        storage = TrainingStorage(remove=True)
+        storage = TrainingStorage(remove=False)
         Ants.run(MyBot(storage))
 
     try:
