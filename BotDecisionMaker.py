@@ -26,18 +26,17 @@ num_acts = 5
 # Reinforcement learning parameters
 init_epsilon = 1.0
 fin_epsilon = 0.05
-explore = 10000000
+explore = 500000
 
 
 class DecisionMaker:
     def __init__(self):
-        self.q_s, self.s, variables = create_network()
+        self.q_s, self.s, self.keep_prob = create_network()
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
         self.is_weights = False
 
         # Load weight
-        w_conv1, w_conv2, w_conv3, b_conv1, b_conv2, b_conv3, w_full, b_full = variables
         if os.path.exists(weights_file):
             saver = tf.train.Saver({'w_conv1': w_conv1,
                                     'w_conv2': w_conv2,
@@ -51,7 +50,6 @@ class DecisionMaker:
             saver.restore(self.sess, weights_file)
             self.is_weights = True
 
-
         # set epsilon
         self.epsilon = init_epsilon
         if os.path.exists(pickle_file):
@@ -61,15 +59,14 @@ class DecisionMaker:
                     self.epsilon = unpickler.load()
                 except EOFError:
                     pass
-
-
+        else:
+            self.epsilon = init_epsilon
 
     def make_decision(self, s_in):
         # action one-hot vector
         a = np.zeros(num_acts)
 
         if self.is_weights:
-
             # Reshape input
             s_in = np.reshape(s_in, (1, input_size, input_size, num_chan))
 
@@ -77,7 +74,7 @@ class DecisionMaker:
             if random.random() <= self.epsilon:
                 a_index = random.randrange(num_acts)
             else:
-                q = self.sess.run(self.q_s, feed_dict={self.s: s_in})
+                q = self.sess.run(self.q_s, feed_dict={self.s: s_in, self.keep_prob: 1.0})
                 a_index = np.argmax(q)
 
         else:
@@ -89,10 +86,7 @@ class DecisionMaker:
         if self.epsilon > fin_epsilon:
             self.epsilon -= (init_epsilon - fin_epsilon) / explore
             self.save_epsilon()
-
-
         return a
-
 
     def save_epsilon(self):
         with open(pickle_file, 'wb') as f:
