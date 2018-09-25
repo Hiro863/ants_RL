@@ -69,7 +69,7 @@ class MyBot:
                 new_loc = ants.destination(ant_loc, direction)
             else:
                 new_loc = ant_loc
-            log((self.turn, 'Moving ant ', ant_loc, ' to ', new_loc))
+            #log((self.turn, 'Moving ant ', ant_loc, ' to ', new_loc))
 
             # remember what have we done this turn
             label = self.tracking.loc_to_ants[ant_loc]
@@ -96,7 +96,7 @@ class MyBot:
                     self.turn - offset
                 )
 
-        self.dmake.save_epsilon()
+        self.dmake.save_results()
 
 
 if __name__ == '__main__':

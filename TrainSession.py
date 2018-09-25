@@ -1,11 +1,11 @@
 import tensorflow as tf
-from BotTrainer import get_data, create_network, train_network
+from BotTrainer import get_data, create_network, train_network, TargetQ
 import os
 import sys
 from pickle import Pickler
 
 weights_file = 'model.ckpt'
-weights_dir = 'tools/weights'
+weights_dir = 'weights'
 pickle_dir = 'pickle_files'
 pickle_file_loss = 'loss.p'
 
@@ -15,6 +15,10 @@ def train_session(session_mode):
     # Fetch data
     print('Fetching data...')
     batches = get_data(session_mode)
+
+    # Get target Q
+    target_q = TargetQ()
+    target_batches = target_q.get_target_q(batches)
 
     # Define Session
     sess = tf.InteractiveSession()
@@ -27,15 +31,16 @@ def train_session(session_mode):
     print('Training...')
     if len(batches) > 1:
         # Train
-        last_loss = train_network(q_s, s, sess, batches, keep_prob, session_mode)
+        last_loss = train_network(q_s, s, sess, batches, target_batches, keep_prob, session_mode)
 
         # Save the weights
         if not os.path.exists(weights_dir):
             os.makedirs(weights_dir)
             print('directory created')
+        print('saving weights...')
         saver = tf.train.Saver()
-        path = os.path.join(weights_dir, weights_file)
-        saver.save(sess, path)
+        weights_path = os.path.join(weights_dir, weights_file)
+        saver.save(sess, weights_path)
         print('weights saved')
 
     # save loss value

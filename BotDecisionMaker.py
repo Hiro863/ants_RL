@@ -12,9 +12,9 @@ from pickle import Pickler, Unpickler
 
 # File names
 # TODO: get paths sorted
-weights_file = os.path.join(os.path.dirname(__file__), 'tools/weights/model.ckpt')
+weights_file = os.path.join(os.path.dirname(__file__), 'weights/model.ckpt')
 pickle_dir = 'pickle_files'
-pickle_file_epsilon = 'epsilon.p'
+pickle_file_session_results = 'session_results.p'
 
 
 # Input
@@ -27,7 +27,7 @@ num_acts = 5
 # Reinforcement learning parameters
 init_epsilon = 1.0
 fin_epsilon = 0.05
-explore = 500000
+explore = 1000000
 
 
 class DecisionMaker:
@@ -36,6 +36,7 @@ class DecisionMaker:
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
         self.is_weights = False
+        self.count = 0
 
         # Load weight
         if os.path.exists(weights_file):
@@ -44,18 +45,21 @@ class DecisionMaker:
             self.is_weights = True
 
         # set epsilon
-        pickle_path = os.path.join(pickle_dir, pickle_file_epsilon)
+        pickle_path = os.path.join(pickle_dir, pickle_file_session_results)
         if os.path.exists(pickle_path):
             with open(pickle_path, 'rb') as f:
                 unpickler = Unpickler(f)
                 try:
-                    self.epsilon = unpickler.load()
+                    self.epsilon, self.count = unpickler.load()
                 except EOFError:
                     pass
         else:
             self.epsilon = init_epsilon
 
     def make_decision(self, s_in):
+        # number of time it was called
+        self.count += 1
+
         # action one-hot vector
         a = np.zeros(num_acts)
 
@@ -78,10 +82,10 @@ class DecisionMaker:
         # scale down epsilon
         if self.epsilon > fin_epsilon:
             self.epsilon -= (init_epsilon - fin_epsilon) / explore
-            self.save_epsilon()
+            self.save_results()
         return a
 
-    def save_epsilon(self):
-        pickle_path = os.path.join(pickle_dir, pickle_file_epsilon)
+    def save_results(self):
+        pickle_path = os.path.join(pickle_dir, pickle_file_session_results)
         with open(pickle_path, 'wb') as f:
-            Pickler(f).dump(self.epsilon)
+            Pickler(f).dump((self.epsilon, self.count))

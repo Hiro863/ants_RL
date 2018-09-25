@@ -33,7 +33,9 @@ pickle_file_observe = 'observing.p'
 pickle_debug = 'debug_data.p'
 pickle_test = 'debug_test.p'
 weights_file = 'model.ckpt'
-weights_dir = 'tools/weights'
+weights_dir = 'weights'
+target_dir = 'target_weights'
+target_weights_file = 'model.ckpt'
 
 
 # Input
@@ -61,9 +63,9 @@ num_acts = 5
 
 # Reinforcement learning parameters
 gamma = 0.99
-batch_size = 100
+batch_size = 30
 l_rate = 1e-6
-epoch = 100
+epoch = 1
 
 
 def add_next_state(data):
@@ -262,22 +264,22 @@ def create_network():
     return q_s, s, keep_prob
 
 
-def train_network(q_s, s, sess, batches, keep_prob, session_mode):
+def train_network(q_s, s, sess, batches, target_batches, keep_prob, session_mode):
     # Placeholders
     a = tf.placeholder(tf.float32, shape=[None, num_acts])
     y = tf.placeholder(tf.float32, shape=[None, 1])
 
     # Loss function
-    q_s_a = tf.reduce_sum(tf.multiply(q_s, a))
-    loss = tf.reduce_mean(tf.square(y - q_s_a))
+    q_s_a = tf.reduce_sum(tf.multiply(q_s, a), keepdims=True)
+    #loss = tf.reduce_mean(tf.square(y - q_s_a))
+    loss = tf.losses.huber_loss(labels=y, predictions=q_s_a)
     train_step = tf.train.AdamOptimizer(l_rate).minimize(loss)
 
     # initialize
-    #sess.run(tf.global_variables_initializer())
-    #print('initialized')
-    if os.path.exists('tools/weights/'):
+    if os.path.exists(weights_dir):
         saver = tf.train.Saver()
-        saver.restore(sess, "tools/weights/model.ckpt")
+        weights_path = os.path.join(weights_dir, weights_file)
+        saver.restore(sess, weights_path)
         print('weights loaded')
     else:
         sess.run(tf.global_variables_initializer())
@@ -286,42 +288,66 @@ def train_network(q_s, s, sess, batches, keep_prob, session_mode):
     # Training
     last_loss = 0
     for i in range(epoch):
-        for count, batch in enumerate(batches):
+        for batch, target_q_batch in zip(batches, target_batches):
             (s_batch, a_batch, r_batch, s_batch_) = batch
             y_batch = []
 
             # get Q value for the next state
-            q_s_a_t = q_s.eval(feed_dict={s: s_batch_, keep_prob: 0.5})
+            # TODO: get q_s value from target Q
+            #q_s_a_t = q_s.eval(feed_dict={s: s_batch_, keep_prob: 1.0})
 
             # calculate target value using Bellman equation
             for j in range(batch_size):
-                y_batch.append(r_batch[j] + gamma * np.max(q_s_a_t[j]))
+                #y_batch.append(r_batch[j] + gamma * np.max(q_s_a_t[j]))
+                y_batch.append(r_batch[j] + gamma * np.max(target_q_batch[j]))
 
             # train the neural network
-            train_step.run(feed_dict={y: y_batch, a: a_batch, s: s_batch, keep_prob: 0.5})
+            train_step.run(feed_dict={y: y_batch, a: a_batch, s: s_batch, keep_prob: 1.0})
 
         # print the loss value
         loss_val = sess.run(loss, feed_dict={y: y_batch, a: a_batch, s: s_batch, keep_prob: 1.0})
-        if session_mode == 'debug':
-            test_batches = get_data('test')
-            correct = 0
-            total = 0
-            for test_batch in test_batches[0]:
-                (test_s_batch, test_a_batch, test_r_batch, test_s_batch_) = test_batch
-                for test_s, test_a in zip(test_s_batch, test_a_batch):
-                    test_s = np.reshape(test_s, (1, input_size, input_size, num_chan))
-                    pred_q = sess.run(q_s, feed_dict={s: test_s})
-                    pred_a = np.zeros(num_acts)
-                    a_index = np.argmax(pred_q)
-                    pred_a[a_index] = 1
-                    if np.argmax(pred_a) == np.argmax(test_a):
-                        correct += 1
-                    total += 1
 
-            accuracy = float(correct / total)
-            print('Epoch: %d, Loss: %f, Accuracy %f' % (i, loss_val, accuracy))
-        else:
-            print('Epoch: %d, Loss: %f' % (i, loss_val))
+        print('Epoch: %d, Loss: %f' % (i, loss_val))
 
-            last_loss = loss_val
+        last_loss = loss_val
     return last_loss
+
+
+class TargetQ:
+    def __init__(self):
+        # Define Session
+        self.target_sess = tf.InteractiveSession()
+
+        # Create network
+        self.q_s, self.s, self.keep_prob = create_network()
+
+        # load weights or initialize
+        path = os.path.join(target_dir, target_weights_file)
+        if os.path.exists(target_dir):
+            saver = tf.train.Saver()
+            saver.restore(self.target_sess, path)
+            print('target weights loaded')
+        else:
+            self.target_sess.run(tf.global_variables_initializer())
+            print('target initialized')
+
+    def get_target_q(self, batches):
+        # get the target value
+        target_batch = []
+
+        for batch in batches:
+            q_s_a_t_batch = []
+            s_batch, a_batch, r_batch, s_batch_ = batch
+
+            for s_ in s_batch_:
+                s_ = np.reshape(s_, (1, input_size, input_size, num_chan))
+                q_s_a_t = self.target_sess.run(self.q_s, feed_dict={self.s: s_, self.keep_prob: 1.0})
+                q_s_a_t = np.reshape(q_s_a_t, num_acts)
+                q_s_a_t_batch.append(q_s_a_t)
+
+            target_batch.append(q_s_a_t_batch)
+        return target_batch
+
+
+
+
